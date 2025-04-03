@@ -30,3 +30,12 @@ func getEnvironmentVariables() Config {
 
 	return cfg
 }
+
+func handleError(err error, printStr string) bool {
+    if err != nil {
+        fmt.PrintLn(printStr, err)
+        return true
+    }
+
+    return false
+}

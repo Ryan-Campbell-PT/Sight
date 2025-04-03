@@ -1,4 +1,9 @@
 <script>
+    let foodListString = $state("")
+    let currentSelectedDate = $state(Date.now)
+    let nutritionInfoIsVisible = $state(false)
+</script>
+<script>
     import { onMount } from "svelte";
     let data = null
 
@@ -19,9 +24,9 @@
     let post = async () => {
         try {
             const res = await fetch("http://localhost:8080/postFoodList", {
-                body: "query: {}",
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                body: foodListString,
             })
 
             if(!res.ok) throw new Error("Failed to fetch")
@@ -33,6 +38,7 @@
 
     onMount(post)
 </script>
+
 <pre>{JSON.stringify(data, null, 2)}</pre>
 
 <head>
@@ -45,12 +51,12 @@
             <!-- this div will contain the food string and ate picker -->
             <div>
                 <!-- this text string assortment can be turned into a reusable class -->
-                <label for="FoodTextString">List of foods</label>
-                <input id="FoodTextString" type="text" placeholder="List of foods, seperated by a comma"/>
+                <label for="FoodListString">List of foods</label>
+                <input id="FoodListString" type="text" placeholder="List of foods, seperated by a comma" bind:value={foodListString}/>
             </div>
             <div>
                 <label for="DatePicker"></label>
-                <input type="date"/>
+                <input type="date" bind:value={currentSelectedDate}/>
             </div>
             <button>Visualize</button>
         </div>

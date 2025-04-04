@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
-	"io"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -17,12 +17,13 @@ func postFoodList(c *gin.Context) {
     // foodListString := c.Query("foodListString")
     // TODO this could be an error point, if requst.body doesnt have the data needed
     cfg := getEnvironmentVariables()
-    foodListString := io.ReadAll(c.Request.Body)
-    foodListQuery := map[string]string {"query": foodListString}
+    foodListString, err := io.ReadAll(c.Request.Body)
+    handleError(err, "Error reading request body from food list: ")
+    foodListQuery := map[string]string {"query": string(foodListString)}
     foodListJsonByteArray, _ := json.Marshal(foodListQuery)
     url := cfg.Nutritionix_domain + cfg.Nutritionix_naturalLanguage
     request, err := http.NewRequest("POST", url, bytes.NewBuffer(foodListJsonByteArray))
-    if handleError(err, "Error creating request: ") return
+    if handleError(err, "Error creating request: ") { return }
 
     request.Header.Set("Content-Type", cfg.Nutritionix_contentType)
     request.Header.Set("x-app-id", cfg.Nutritionix_appid)
@@ -30,18 +31,19 @@ func postFoodList(c *gin.Context) {
 
     client := &http.Client{}
     response, err := client.Do(request)
-    if handleError(err, "Error sending request: ") return
+    if handleError(err, "Error sending request: ") { return }
     defer response.Body.Close()
 
     body, err := io.ReadAll(response.Body)
-    if handleError(err, "Error reading response body: ") return
+    if handleError(err, "Error reading response body: ") { return }
 
-    dailyNutrition := makeFoodResponse(body)
-    if dailyNutrition == nil {
+    dailyNutrition := makeDailyNutrition(makeFoodResponse(string(body)), "2025-4-4") //TODO change this to correct calendar value
+    fmt.Println(dailyNutrition)
+    // TODO pretty sure this check is wrong
+    if &dailyNutrition == nil {
         // TODO Might be an error here due to needing multiple parameters or bad StatusError
-        return c.JSON(http.StatusError)
+        c.JSON(http.StatusInternalServerError, dailyNutrition)
     }
-    fmt.Println("Response body:", string(body))
     // TODO changed this from body to dailyNutrition, could cause error
     c.JSON(http.StatusOK, dailyNutrition)
 }
@@ -65,6 +67,7 @@ func fetchData() (map[string]interface{}, error) {
 
     return data, nil
 }
+
 func main() {
     router := gin.Default()
 

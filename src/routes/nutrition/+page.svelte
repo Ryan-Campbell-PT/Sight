@@ -1,12 +1,17 @@
-<script>
-    let foodListString = $state("")
-    let currentSelectedDate = $state(Date.now)
-    let nutritionInfoIsVisible = $state(false)
-</script>
-<script>
+<script lang="ts">
     import { onMount } from "svelte";
-    let data = null
+    import { writable } from "svelte/store";
 
+    import NutritionDisplay from "../../NutritionDisplay.svelte";
+    import NutritionLabel from "../../NutritionLabel.svelte";
+    
+    let foodListString = $state("")
+    let currentSelectedDate = $state(new Date().toDateString())
+    let nutritionInfoIsVisible = $state(false)
+    // let nutritionData = $state(null)
+
+    export const userStore = writable<NutritionData | null>(null);
+    
     let get = async () => {
         try {
             const res = await fetch("http://localhost:8080/nutritionix", {
@@ -15,7 +20,7 @@
             })
 
             if(!res.ok) throw new Error("Failed to fetch")
-            data = await res.json()
+            // data = await res.json()
         } catch(error) {
             console.error(error)
         }
@@ -29,23 +34,29 @@
                 body: foodListString,
             })
 
-            if(!res.ok) throw new Error("Failed to fetch")
-            data = await res.json()
+            if(!res.ok) {
+                // nutritionData = null
+                nutritionInfoIsVisible = false
+                throw new Error("Failed to fetch")
+            }
+            else {
+                const nutritionData: NutritionData = await res.json()
+                // userStore.set(new NutritionData(nutritionData))
+                nutritionInfoIsVisible = true
+            }
         } catch(error) {
             console.error(error)
         }
     }
 
-    onMount(post)
+    // onMount(() => {console.log(currentSelectedDate)})
 </script>
 
-<pre>{JSON.stringify(data, null, 2)}</pre>
 
-<head>
+<svelte:head>
     <title>Nutrition Page</title>
-</head>
-<body>
-    <h2>Nutrition Page</h2>
+</svelte:head>
+    <!-- <h2>Nutrition Page</h2> -->
     <div style="display: flex;">
         <div id="foodStringAndDatePicker" style="display: flex;">
             <!-- this div will contain the food string and ate picker -->
@@ -56,9 +67,9 @@
             </div>
             <div>
                 <label for="DatePicker"></label>
-                <input type="date" bind:value={currentSelectedDate}/>
+                <input type="date" bind:value={currentSelectedDate} onchange={() => console.log(currentSelectedDate)}/>
             </div>
-            <button>Visualize</button>
+            <button onclick={post}>Visualize</button>
         </div>
         <div>
             <!-- this div will contain established recipes and images associated with them.
@@ -93,7 +104,6 @@
             <!-- this div will display the nutrition label
             and maybe the breakdown, depending on space
             breakdown may be better suited in general middle of page -->
-            
+            <!-- <NutritionDisplay nutritionInfo={nutritionObject}></NutritionDisplay> -->
         </div>
     </div>
-</body>

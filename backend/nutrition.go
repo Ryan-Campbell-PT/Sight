@@ -2,7 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"math"
+	"time"
 )
 
 type Nutrient struct {
@@ -49,12 +50,42 @@ type FoodResponse struct {
 	Foods []Food `json:"foods"`
 }
 
+type DailyNutrition struct {
+	AllInformation FoodResponse // save response for reference if needed
+	NutritionValues Food
+	FoodListString string
+	Date time.Time
+}
 // TODO im not sure what the variable type needed for this is
 func makeFoodResponse(responseBody string) FoodResponse {
 	var response FoodResponse
 	// TODO may need an additional value besides just err
 	err := json.Unmarshal([]byte(responseBody), &response)
-	if handleError(err, "Error parsing Food Response JSON: ") return nil
+	if handleError(err, "Error parsing Food Response JSON: ") { return response }
 
 	return response
+}
+
+func makeDailyNutrition(foodList FoodResponse, date string) DailyNutrition {
+	parseDate, err := time.Parse(time.DateOnly, date)
+	handleError(err, "Error parsing time for Daily Nutrition: ")
+	ret := DailyNutrition{
+		// AllInformation: foodList,
+		Date: parseDate,
+		NutritionValues: Food{},
+	}
+	for _, food := range foodList.Foods {
+		ret.NutritionValues.Calories += math.Round(food.Calories)
+		ret.NutritionValues.Cholesterol += math.Round(food.Cholesterol)
+		ret.NutritionValues.DietaryFiber += math.Round(food.DietaryFiber)
+		ret.NutritionValues.Phosphorus += math.Round(food.Phosphorus)
+		ret.NutritionValues.Potassium += math.Round(food.Potassium)
+		ret.NutritionValues.Protein += math.Round(food.Protein)
+		ret.NutritionValues.SaturatedFat += math.Round(food.SaturatedFat)
+		ret.NutritionValues.Sodium += math.Round(food.Sodium)
+		ret.NutritionValues.Sugars += math.Round(food.Sugars)
+		ret.NutritionValues.TotalCarbohydrate += math.Round(food.TotalCarbohydrate)
+		ret.NutritionValues.TotalFat += math.Round(food.TotalFat)
+	}
+	return ret
 }

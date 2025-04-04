@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+    "fmt"
 
 	"github.com/joho/godotenv"
 	"github.com/caarlos0/env/v6"
@@ -33,7 +34,7 @@ func getEnvironmentVariables() Config {
 
 func handleError(err error, printStr string) bool {
     if err != nil {
-        fmt.PrintLn(printStr, err)
+        fmt.Println(printStr, err)
         return true
     }
 

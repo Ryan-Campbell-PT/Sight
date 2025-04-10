@@ -4,29 +4,16 @@
 
     import NutritionDisplay from "../../NutritionDisplay.svelte";
     import NutritionLabel from "../../NutritionLabel.svelte";
+    import { NutritionResponseObject } from "../../NutritionData"
     
     let foodListString = $state("")
     let currentSelectedDate = $state(new Date().toDateString())
     let nutritionInfoIsVisible = $state(false)
-    // let nutritionData = $state(null)
+    let nutritionResponse = $state(new NutritionResponseObject())
 
-    export const userStore = writable<NutritionData | null>(null);
-    
-    let get = async () => {
-        try {
-            const res = await fetch("http://localhost:8080/nutritionix", {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            })
+    export const userStore = writable<NutritionResponseObject | null>(null);
 
-            if(!res.ok) throw new Error("Failed to fetch")
-            // data = await res.json()
-        } catch(error) {
-            console.error(error)
-        }
-    }
-
-    let post = async () => {
+    let post_foodList = async () => {
         try {
             const res = await fetch("http://localhost:8080/postFoodList", {
                 method: "POST",
@@ -35,13 +22,11 @@
             })
 
             if(!res.ok) {
-                // nutritionData = null
                 nutritionInfoIsVisible = false
                 throw new Error("Failed to fetch")
             }
             else {
-                const nutritionData: NutritionData = await res.json()
-                // userStore.set(new NutritionData(nutritionData))
+                Object.assign(nutritionResponse, JSON.parse(await res.json()))
                 nutritionInfoIsVisible = true
             }
         } catch(error) {
@@ -69,7 +54,7 @@
                 <label for="DatePicker"></label>
                 <input type="date" bind:value={currentSelectedDate} onchange={() => console.log(currentSelectedDate)}/>
             </div>
-            <button onclick={post}>Visualize</button>
+            <button onclick={post_foodList}>Visualize</button>
         </div>
         <div>
             <!-- this div will contain established recipes and images associated with them.
@@ -104,6 +89,8 @@
             <!-- this div will display the nutrition label
             and maybe the breakdown, depending on space
             breakdown may be better suited in general middle of page -->
-            <!-- <NutritionDisplay nutritionInfo={nutritionObject}></NutritionDisplay> -->
+            {#if nutritionInfoIsVisible}
+                <NutritionDisplay nutritionResponse={nutritionResponse} isVisible={nutritionInfoIsVisible}/>
+            {/if}
         </div>
     </div>

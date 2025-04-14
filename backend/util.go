@@ -1,28 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"log"
-    "fmt"
 
-	"github.com/joho/godotenv"
 	"github.com/caarlos0/env/v6"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-    User string `env:"DBUSER"`
-    Password string `env:"DBPASS"`
-    Nutritionix_appid string `env:"nutrition__appid"`
-    Nutritionix_appkey string `env:"nutrition__appkey"`
-    Nutritionix_domain string `env:"nutrition__domain"`
-    Nutritionix_naturalLanguage string `env:"nutrition__naturalLanguage"`
-    Nutritionix_contentType string `env:"nutrition__contentType"`
+	User                        string `env:"DBUSER"`
+	Password                    string `env:"DBPASS"`
+	Nutritionix_appid           string `env:"nutrition__appid"`
+	Nutritionix_appkey          string `env:"nutrition__appkey"`
+	Nutritionix_domain          string `env:"nutrition__domain"`
+	Nutritionix_naturalLanguage string `env:"nutrition__naturalLanguage"`
+	Nutritionix_contentType     string `env:"nutrition__contentType"`
 }
 
 func getEnvironmentVariables() Config {
-    err := godotenv.Load("/home/lyon/Documents/Sight/.env")
-    if err != nil {
-        log.Fatalf("unable to load .env file")
-    }
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatalf("unable to load .env file")
+	}
 	cfg := Config{}
 	err = env.Parse(&cfg)
 	if err != nil {
@@ -32,11 +32,11 @@ func getEnvironmentVariables() Config {
 	return cfg
 }
 
-func handleError(err error, printStr string) bool {
-    if err != nil {
-        fmt.Println(printStr, err)
-        return true
-    }
+func handleError(printStr string, err error) bool {
+	if err != nil {
+		fmt.Println(printStr, err)
+		return true
+	}
 
-    return false
+	return false
 }

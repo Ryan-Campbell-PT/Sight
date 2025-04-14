@@ -3,73 +3,72 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func postFoodList(c *gin.Context) {
-    // Http request would be formatted like /postFoodList?foodListString=
-    // foodListString := c.Query("foodListString")
-    // TODO this could be an error point, if requst.body doesnt have the data needed
-    cfg := getEnvironmentVariables()
-    foodListString, err := io.ReadAll(c.Request.Body)
-    handleError(err, "Error reading request body from food list: ")
-    foodListQuery := map[string]string {"query": string(foodListString)}
-    foodListJsonByteArray, _ := json.Marshal(foodListQuery)
-    url := cfg.Nutritionix_domain + cfg.Nutritionix_naturalLanguage
-    request, err := http.NewRequest("POST", url, bytes.NewBuffer(foodListJsonByteArray))
-    if handleError(err, "Error creating request: ") { return }
-
-    request.Header.Set("Content-Type", cfg.Nutritionix_contentType)
-    request.Header.Set("x-app-id", cfg.Nutritionix_appid)
-    request.Header.Set("x-app-key", cfg.Nutritionix_appkey)
-
-    client := &http.Client{}
-    response, err := client.Do(request)
-    if handleError(err, "Error sending request: ") { return }
-    defer response.Body.Close()
-
-    body, err := io.ReadAll(response.Body)
-    if handleError(err, "Error reading response body: ") { return }
-
-    dailyNutrition := makeDailyNutrition(makeFoodResponse(string(body)), "2025-4-4") //TODO change this to correct calendar value
-    fmt.Println(dailyNutrition)
-    // TODO pretty sure this check is wrong
-    if &dailyNutrition == nil {
-        // TODO Might be an error here due to needing multiple parameters or bad StatusError
-        c.JSON(http.StatusInternalServerError, dailyNutrition)
-    }
-    // TODO changed this from body to dailyNutrition, could cause error
-    c.JSON(http.StatusOK, dailyNutrition)
+func readRequestBody(body io.ReadCloser) (string, error) {
+	defer body.Close()
+	data, err := io.ReadAll(body)
+	return string(data), err
 }
 
-func fetchData() (map[string]interface{}, error) {
-    url := "https://jsonplaceholder.typicode.com/todos/1"
+func buildNutritionixRequest(foodList string) (*http.Request, error) {
+	cfg := getEnvironmentVariables()
+	foodQuery := map[string]string{"query": foodList}
+	body, err := json.Marshal(foodQuery)
+	if err != nil {
+		return nil, err
+	}
 
-    resp, err := http.Get(url)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
+	url := cfg.Nutritionix_domain + cfg.Nutritionix_naturalLanguage
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
 
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        return nil, err
-    }
+	request.Header.Set("Content-Type", cfg.Nutritionix_contentType)
+	request.Header.Set("x-app-id", cfg.Nutritionix_appid)
+	request.Header.Set("x-app-key", cfg.Nutritionix_appkey)
 
-    var data map[string]interface{}
-    json.Unmarshal(body, &data)
+	return request, nil
+}
 
-    return data, nil
+func sendRequest(req *http.Request) ([]byte, error) {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
+}
+
+func post_nutritionixQueryRequest(c *gin.Context) {
+	foodListString, err := readRequestBody(c.Request.Body)
+	if handleError("Error reading request body: ", err) {
+		return
+	}
+
+	request, err := buildNutritionixRequest(foodListString)
+	if handleError("Error building Nutritionix request: ", err) {
+		return
+	}
+
+	responseByteArray, err := sendRequest(request)
+	if handleError("Error sending Nutritionix request: ", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, string(responseByteArray))
 }
 
 func main() {
-    router := gin.Default()
+	router := gin.Default()
 
 	// Enable CORS
 	router.Use(cors.New(cors.Config{
@@ -79,18 +78,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	router.POST("/postFoodList", post_nutritionixQueryRequest)
 
-
-    router.GET("/nutrition", func(c *gin.Context) {
-        data, err := fetchData()
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch data"})
-            return
-        }
-        c.JSON(http.StatusOK, data)
-    })
-
-    router.POST("/postFoodList", postFoodList)
-
-    router.Run(":8080")
+	router.Run(":8080")
 }

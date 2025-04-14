@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { Input, Label, Button } from "@sveltestrap/sveltestrap";
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
 
@@ -10,6 +11,7 @@
     let currentSelectedDate = $state(new Date().toDateString())
     let nutritionInfoIsVisible = $state(false)
     let nutritionResponse = $state(new NutritionResponseObject())
+    let displayAddNewRecipe = $state(true)
 
     export const userStore = writable<NutritionResponseObject | null>(null);
 
@@ -38,54 +40,61 @@
 </script>
 
 
-<svelte:head>
-    <title>Nutrition Page</title>
-</svelte:head>
-    <!-- <h2>Nutrition Page</h2> -->
-    <div style="display: flex;">
-        <div id="foodStringAndDatePicker" style="display: flex;">
-            <!-- this div will contain the food string and ate picker -->
-            <div>
+<title>Nutrition Page</title>
+<!-- <h2>Nutrition Page</h2> -->
+<div class="container">
+    <div class="row">
+        <!-- this div will contain the food string and date picker -->
+        <div id="first-column-half" class="col-md-6">
+            <div id="food-list" class="my-2">
                 <!-- this text string assortment can be turned into a reusable class -->
-                <label for="FoodListString">List of foods</label>
-                <input id="FoodListString" type="text" placeholder="List of foods, seperated by a comma" bind:value={foodListString}/>
-            </div>
-            <div>
-                <label for="DatePicker"></label>
-                <input type="date" bind:value={currentSelectedDate} onchange={() => console.log(currentSelectedDate)}/>
-            </div>
-            <button onclick={post_foodList}>Visualize</button>
-        </div>
-        <div>
-            <!-- this div will contain established recipes and images associated with them.
-            The actual display of these should be a class -->
-            <div style="display: flex;">
-                <div id="establishedRecipeClass_recipe1">
-                    <img src="" alt="" width="75px" height="75px"/> <!--turn these width/height values into a variable-->
-                    <span>recipe1</span>
-                </div>
-                <div id="establishedRecipeClass_recipe2">
-                    <img src="" alt="" width="75px" height="75px"/>
-                    <span>recipe2</span>
-                </div>
-            </div>
-            <div id="addNewRecipe">
-                <!-- this div will be used to add a new recipe -->
-                <!-- clicking this button will set state property `addNewRecipe` to true and display the div below -->
-                <label for="isNewRecipeCheckbox">Add New Recipe?</label>
-                <input id="isNewRecipeCheckbox" type="checkbox"/>
-                <div id="isNewRecipe?">
-                    <label for="newRecipeName"></label>
-                    <input id="newRecipeName" type="text" placeholder="Name of new recipe">
+                <Label for="FoodListString">
+                    <p style="font-size: small"> Enter a query like: <b>1 banana, .5 cup of white rice, 1 pound ground beef</b> to get the nutrition information </p>
+                    <Input id="FoodListString" type="textarea" placeholder="List of foods, seperated by a comma" bind:value={foodListString}/>
+                </Label>
 
-                    <label for="newRecipeTextString"></label>
-                    <input id="newRecipeTextString" type="text" placeholder="New Recipe">
-
-                    <button>Save Recipe</button>
+                <div class="d-flex justify-content-between">
+                    <Label for="DatePicker" class="inline">
+                        <Input type="date" bind:value={currentSelectedDate} onchange={() => console.log(currentSelectedDate)}/>
+                    </Label>
+                    <Button onclick={post_foodList}>Visualize</Button>
                 </div>
             </div>
+            <div id="recipe-options">
+
+            </div>
+
+            <Label for="show-add-new-recipe">
+                Add new recipe?
+                <Input id="show-add-new-recipe" type="checkbox" checked={displayAddNewRecipe} onclick={() => {displayAddNewRecipe = !displayAddNewRecipe}}/>
+            </Label>
+
+            {#if displayAddNewRecipe}
+                <div id="add-new-recipe" class="my-2">
+                    <p style="font-size: small;">Enter in the recipe ingredients below, along with the serving size.<br/>
+                        The recipe will be saved for use later, where you can specify the servings
+                    </p>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="d-flex my-2">
+                                <Label for="new-recipe-serving-input">
+                                    Servings
+                                </Label>
+                                <Input id="new-recipe-serving-input" class="mx-2" style="width: 20%;" type="number" placeholder="Servings" defaultValue=1 min=1/>
+                            </div>
+                            <Label for="new-recipe-input">
+                                <Input id="new-recipe-input" type="textarea" placeholder="List of foods, seperated by a comma"/>
+                            </Label>
+                        </div>
+                        <div>
+                            <Button>Save Recipe</Button>
+                        </div>
+                    </div>
+                </div>
+            {/if}
+
         </div>
-        <div>
+        <div id="nutrition-information" class="col-md-6">
             <!-- this div will display the nutrition label
             and maybe the breakdown, depending on space
             breakdown may be better suited in general middle of page -->
@@ -94,3 +103,4 @@
             {/if}
         </div>
     </div>
+</div>

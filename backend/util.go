@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -30,6 +31,18 @@ func getEnvironmentVariables() Config {
 	}
 
 	return cfg
+}
+
+func getSqlConfig() mysql.Config {
+	cfg := getEnvironmentVariables()
+	return mysql.Config{
+		User: cfg.User,
+		Passwd: cfg.Password,
+		Net: "tcp",
+		Addr: "127.0.0.1:3306",
+		DBName: "consume",
+		AllowNativePasswords: true,
+	}
 }
 
 func handleError(printStr string, err error) bool {

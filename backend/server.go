@@ -10,10 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func readRequestBody(body io.ReadCloser) (string, error) {
+type BodyResponse struct {
+    FoodListString string    `json:"foodListString"`
+    Date string              `json:"date"`
+    SaveToDb bool            `json:"saveToDb"`
+}
+
+func readRequestBody(body io.ReadCloser) ([]byte, error) {
 	defer body.Close()
 	data, err := io.ReadAll(body)
-	return string(data), err
+	return data, err
 }
 
 func buildNutritionixRequest(foodList string) (*http.Request, error) {
@@ -49,12 +55,18 @@ func sendRequest(req *http.Request) ([]byte, error) {
 }
 
 func post_nutritionixQueryRequest(c *gin.Context) {
-	foodListString, err := readRequestBody(c.Request.Body)
+	bodyJson, err := readRequestBody(c.Request.Body)
 	if handleError("Error reading request body: ", err) {
 		return
 	}
 
-	request, err := buildNutritionixRequest(foodListString)
+    var bodyObj BodyResponse
+    err = json.Unmarshal(bodyJson, &bodyObj)
+    if handleError("Error reading body from request: ", err) {
+        return
+    }
+
+	request, err := buildNutritionixRequest(bodyObj.FoodListString)
 	if handleError("Error building Nutritionix request: ", err) {
 		return
 	}
@@ -64,10 +76,17 @@ func post_nutritionixQueryRequest(c *gin.Context) {
 		return
 	}
 
+    if bodyObj.SaveToDb {
+        err := saveToDatabase(bodyObj)
+        if handleError("Error saving bodyObj to database: ", err) {
+            return 
+        }
+    }
+
 	c.JSON(http.StatusOK, string(responseByteArray))
 }
 
-func main() {
+func runServer() {
 	router := gin.Default()
 
 	// Enable CORS

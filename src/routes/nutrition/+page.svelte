@@ -5,8 +5,15 @@
     import NutritionLabel from "../../NutritionLabel.svelte";
     import { NutritionResponseObject } from "../../NutritionData"
     
+    function formatDateToYYYYMMDD(date: Date): string {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     let foodListString = $state("")
-    let currentSelectedDate = $state(new Date().toDateString())
+    let currentSelectedDate = $state(formatDateToYYYYMMDD(new Date()))
     let nutritionInfoIsVisible = $state(false)
     let nutritionResponse = $state(
         {
@@ -18,12 +25,17 @@
     let showAddNewRecipe = $state(true)
     let showNutritionBreakdown = $state(true)
 
-    let post_foodList = async () => {
+    let post_foodList = async (saveToDb = false) => {
+        const bodyObj = {
+            foodListString: foodListString,
+            date: currentSelectedDate,
+            saveToDb: saveToDb
+        }
         try {
             const res = await fetch("http://localhost:8080/postFoodList", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: foodListString,
+                body: JSON.stringify(bodyObj),
             })
 
             if(!res.ok) {
@@ -62,7 +74,8 @@
                     <Label for="DatePicker" class="inline">
                         <Input type="date" bind:value={currentSelectedDate} onchange={() => console.log(currentSelectedDate)}/>
                     </Label>
-                    <Button onclick={post_foodList}>Visualize</Button>
+                    <Button onclick={() => post_foodList()}>Visualize</Button>
+                    <Button onclick={() => post_foodList(true)}>Visualize and Save</Button>
                 </div>
             </div>
             <div id="recipe-options">

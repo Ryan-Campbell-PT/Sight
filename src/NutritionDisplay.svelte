@@ -2,22 +2,43 @@
 <script lang="ts">
     import NutritionLabel from "./NutritionLabel.svelte";
     import { NutritionResponseObject } from "./NutritionData";
-    import NutritionBreakdown from "./NutritionBreakdown.svelte";
+    import FoodBreakdown from "./FoodBreakdown.svelte";
 
     export let nutritionResponse: NutritionResponseObject;
-    export let isVisible: boolean;
+    export let nutritionLabelIsVisible: boolean;
+    export let nutritionBreakdownIsVisible: boolean;
 </script>
 
-{#if isVisible}
+{#if nutritionLabelIsVisible || nutritionBreakdownIsVisible}
     <div>
         <div class="nutritionLabel">
-            <NutritionLabel totalNutritionInfo={nutritionResponse.getTotalNutritionData()} isVisible={isVisible}/>
+            <NutritionLabel
+                totalNutritionInfo={nutritionResponse.getTotalNutritionData()}
+                isVisible={nutritionLabelIsVisible}
+            />
         </div>
-        <div class="totalNutritionBreakdown">
-            {#each nutritionResponse.foods as food}
-                <NutritionBreakdown item={food}/>
-                <br/>
-            {/each}
-        </div>
+        {#if nutritionBreakdownIsVisible}
+            <table class="total-food-nutrition-breakdown table">
+                <thead>
+                    <tr>
+                        <th scope="col">Image</th>
+                        <th scope="col">Food</th>
+                        <th scope="col">Calories</th>
+                        <th scope="col">Carbs</th>
+                        <th scope="col">Protein</th>
+                        <th scope="col">Sodium</th>
+                        <th scope="col">Sugar</th>
+                        <th scope="col">Fat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each nutritionResponse.foods as food}
+                        <FoodBreakdown
+                            item={food}
+                        />
+                    {/each}
+                </tbody>
+            </table>
+        {/if}
     </div>
 {/if}

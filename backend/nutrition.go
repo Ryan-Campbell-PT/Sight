@@ -61,14 +61,14 @@ func makeFoodResponse(responseBody string) FoodResponse {
 	var response FoodResponse
 	// TODO may need an additional value besides just err
 	err := json.Unmarshal([]byte(responseBody), &response)
-	if handleError(err, "Error parsing Food Response JSON: ") { return response }
+	if handleError("Error parsing Food Response JSON: ", err) { return response }
 
 	return response
 }
 
 func makeDailyNutrition(foodList FoodResponse, date string) DailyNutrition {
 	parseDate, err := time.Parse(time.DateOnly, date)
-	handleError(err, "Error parsing time for Daily Nutrition: ")
+	handleError("Error parsing time for Daily Nutrition: ", err)
 	ret := DailyNutrition{
 		// AllInformation: foodList,
 		Date: parseDate,

@@ -1,7 +1,5 @@
 <script lang="ts">
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
-    import { onMount } from "svelte";
-    import { writable } from "svelte/store";
 
     import NutritionDisplay from "../../NutritionDisplay.svelte";
     import NutritionLabel from "../../NutritionLabel.svelte";
@@ -10,10 +8,15 @@
     let foodListString = $state("")
     let currentSelectedDate = $state(new Date().toDateString())
     let nutritionInfoIsVisible = $state(false)
-    let nutritionResponse = $state(new NutritionResponseObject())
-    let displayAddNewRecipe = $state(true)
-
-    export const userStore = writable<NutritionResponseObject | null>(null);
+    let nutritionResponse = $state(
+        {
+            nutritionResponseObject: new NutritionResponseObject(),
+            // with the display variable being created, you may be able to get rid of one of the isVisible variables
+            display: false
+        }
+    )
+    let showAddNewRecipe = $state(true)
+    let showNutritionBreakdown = $state(true)
 
     let post_foodList = async () => {
         try {
@@ -25,10 +28,12 @@
 
             if(!res.ok) {
                 nutritionInfoIsVisible = false
+                nutritionResponse.display = false
                 throw new Error("Failed to fetch")
             }
             else {
-                Object.assign(nutritionResponse, JSON.parse(await res.json()))
+                Object.assign(nutritionResponse.nutritionResponseObject, JSON.parse(await res.json()))
+                nutritionResponse.display = true
                 nutritionInfoIsVisible = true
             }
         } catch(error) {
@@ -66,10 +71,10 @@
 
             <Label for="show-add-new-recipe">
                 Add new recipe?
-                <Input id="show-add-new-recipe" type="checkbox" checked={displayAddNewRecipe} onclick={() => {displayAddNewRecipe = !displayAddNewRecipe}}/>
+                <Input id="show-add-new-recipe" type="checkbox" bind:checked={showAddNewRecipe}/>
             </Label>
 
-            {#if displayAddNewRecipe}
+            {#if showAddNewRecipe}
                 <div id="add-new-recipe" class="my-2">
                     <p style="font-size: small;">Enter in the recipe ingredients below, along with the serving size.<br/>
                         The recipe will be saved for use later, where you can specify the servings
@@ -98,9 +103,19 @@
             <!-- this div will display the nutrition label
             and maybe the breakdown, depending on space
             breakdown may be better suited in general middle of page -->
-            {#if nutritionInfoIsVisible}
-                <NutritionDisplay nutritionResponse={nutritionResponse} isVisible={nutritionInfoIsVisible}/>
+            {#if nutritionResponse.display}
+                <Label for="displayNutritionBreakdown">
+                    Display Nutrition Breakdown?
+                    <Input id="displayNutritionBreakdown" type="checkbox" bind:checked={nutritionInfoIsVisible}/>
+                </Label>
+                {#if nutritionInfoIsVisible}
+                    <NutritionDisplay
+                        nutritionResponse={nutritionResponse.nutritionResponseObject}
+                        nutritionLabelIsVisible={nutritionInfoIsVisible}
+                        nutritionBreakdownIsVisible={showNutritionBreakdown}
+                    />
+                {/if}
             {/if}
-        </div>
+            </div>
     </div>
 </div>

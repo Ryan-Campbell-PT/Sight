@@ -12,7 +12,9 @@
         return `${year}-${month}-${day}`;
     }
 
-    let foodListString = $state("")
+    let foodListString_calculate = $state("")
+    let foodListString_recipe = $state("")
+    let numServings_recipe = $state(1)
     let currentSelectedDate = $state(formatDateToYYYYMMDD(new Date()))
     let nutritionInfoIsVisible = $state(false)
     let nutritionResponse = $state(
@@ -26,8 +28,8 @@
     let showNutritionBreakdown = $state(true)
 
     let post_foodList = async (saveToDb = false) => {
-        const bodyObj = {
-            foodListString: foodListString,
+        const body = {
+            foodListString: foodListString_calculate,
             date: currentSelectedDate,
             saveToDb: saveToDb
         }
@@ -35,7 +37,7 @@
             const res = await fetch("http://localhost:8080/postFoodList", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bodyObj),
+                body: JSON.stringify(body),
             })
 
             if(!res.ok) {
@@ -53,6 +55,35 @@
         }
     }
 
+    let post_recipe = async () => {
+        const body = {
+            foodListString: foodListString_recipe,
+            numServings: numServings_recipe,
+        }
+
+        try {
+            const res = await fetch("http://localhost:8080/postRecipe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            })
+
+            if(!res.ok) {
+                //TODO display some error
+            }
+            else {
+                //nothing to save, just show something on page to confirm it saved correctly
+                //TODO save recipe, add it to recipe list on page
+                //OR
+                //refresh page to fill information, which should reach out to db to get recipe information
+            }
+        }
+        catch(error) {
+                console.log(error)
+        }
+    }
+
+
     // onMount(() => {console.log(currentSelectedDate)})
 </script>
 
@@ -67,7 +98,7 @@
                 <!-- this text string assortment can be turned into a reusable class -->
                 <Label for="FoodListString">
                     <p style="font-size: small"> Enter a query like: <b>1 banana, .5 cup of white rice, 1 pound ground beef</b> to get the nutrition information </p>
-                    <Input id="FoodListString" type="textarea" placeholder="List of foods, seperated by a comma" bind:value={foodListString}/>
+                    <Input id="FoodListString" type="textarea" placeholder="List of foods, seperated by a comma" bind:value={foodListString_calculate}/>
                 </Label>
 
                 <div class="d-flex justify-content-between">
@@ -98,14 +129,14 @@
                                 <Label for="new-recipe-serving-input">
                                     Servings
                                 </Label>
-                                <Input id="new-recipe-serving-input" class="mx-2" style="width: 20%;" type="number" placeholder="Servings" defaultValue=1 min=1/>
+                                <Input id="new-recipe-serving-input" class="mx-2" style="width: 20%;" type="number" placeholder="Servings" defaultValue=1 min=1 bind:value={numServings_recipe}/>
                             </div>
                             <Label for="new-recipe-input">
-                                <Input id="new-recipe-input" type="textarea" placeholder="List of foods, seperated by a comma"/>
+                                <Input id="new-recipe-input" type="textarea" placeholder="List of foods, seperated by a comma" bind:value={foodListString_recipe}/>
                             </Label>
                         </div>
                         <div>
-                            <Button>Save Recipe</Button>
+                            <Button onclick={post_recipe}>Save Recipe</Button>
                         </div>
                     </div>
                 </div>

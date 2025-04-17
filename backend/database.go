@@ -8,15 +8,15 @@ import (
 )
 
 type Daily struct {
-	ID			int64
-	foodString	string
-	date		string
+	ID         int64
+	foodString string
+	date       string
 }
 
 // this dbOnce variable makes it so no matter how many times you call the function getDatabase()
 // the code inside will only run once
 var (
-	db *sql.DB
+	db     *sql.DB
 	dbOnce sync.Once
 )
 
@@ -26,12 +26,12 @@ func IRRELEVANT() {
 	cfg := getSqlConfig()
 	var err error
 	db, err = sql.Open("mysql", cfg.FormatDSN())
-	if(err != nil) {
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	pingErr := db.Ping()
-	if(pingErr != nil) {
+	if pingErr != nil {
 		log.Fatal(pingErr)
 	}
 
@@ -93,27 +93,58 @@ func visualizationTest_queryForDailyCalories() ([]Daily, error) {
 func getDatabase() *sql.DB {
 	dbOnce.Do(func() {
 		cfg := getSqlConfig()
-		db, err := sql.Open("mysql", cfg.FormatDSN())
-		if(err != nil) {
+		dbObj, err := sql.Open("mysql", cfg.FormatDSN())
+		if err != nil {
 			log.Fatal(err)
 		}
 
-		pingErr := db.Ping()
-		if(pingErr != nil) {
+		pingErr := dbObj.Ping()
+		if pingErr != nil {
 			log.Fatal(pingErr)
 		}
+		db = dbObj
 	})
 
 	return db
 }
 
-func saveToDatabase(data BodyResponse) error {
+func saveToDatabase_BodyResponse(data BodyResponse) error {
 	db := getDatabase()
-	
-	_, err := db.Exec("INSERT INTO Daily(Date, FoodString) VALUES(?, ?)", data.Date, data.FoodListString)
+
+	_, err := db.Exec("INSERT INTO daily(Date, FoodString) VALUES(?, ?)", data.Date, data.FoodListString)
 	if handleError("Error inserting body values into database: ", err) {
 		return err
 	}
 
 	return nil
 }
+
+func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo Food) error {
+	db := getDatabase()
+	// TODO inserting into database is working correctly
+	// however, nutrition information is not corrctly being assigned (always ends up as 0 atm)
+	// and there are no recipe_name, or food_string in the recipe table
+	// foreign_key stuff is working correctly
+
+	//TODO inserting into the Nutrition table is going to be cumbersome and frequent
+	//some function should be made to automate that
+	response, err := db.Exec("INSERT INTO nutrition_info(calories, protein, carbs, fiber) VALUES(?, ?, ?, ?)", nutritionInfo.Calories, nutritionInfo.Protein, nutritionInfo.TotalCarbohydrate, nutritionInfo.DietaryFiber)
+	if handleError("Error inserting into Nutrition Table from RecipeResponse", err) {
+		return err
+	}
+	
+	nutritionKey, err := response.LastInsertId()
+	if handleError("Error getting nutritionKey in Recipe Response", err) {
+		return err
+	}
+
+	response, err = db.Exec("INSERT INTO recipe(recipe_name, food_string, serving_size, nutrition_id) VALUES(?, ?, ?, ?)", data.RecipeName, data.FoodString, 1, nutritionKey)
+	if handleError("Error inserting into Recipe Table from Recipe Response", err) {
+		return err
+	}
+
+	return nil
+}
+
+// func createInsertStatementFromNutritionInfo(nutInfo Food) string {
+// }

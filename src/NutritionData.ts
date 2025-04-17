@@ -72,20 +72,20 @@ import { roundToDecimal } from "../src/util"
     class NutritionResponseObject {
         foods: FoodItem[] = [];
 
-        public getTotalNutritionData() : NutritionMacros {
+        public getTotalNutritionData(decimal: number) : NutritionMacros {
             let ret = new NutritionMacros();
             this.foods.forEach(food => {
-                ret.calories = roundToDecimal(ret.calories + food.nf_calories, 2)
-                ret.cholesterol = roundToDecimal(ret.cholesterol + food.nf_cholesterol, 2)
-                ret.dietary_fiber = roundToDecimal(ret.dietary_fiber + food.nf_dietary_fiber, 2)
-                ret.phosphorus = roundToDecimal(ret.phosphorus + food.nf_p, 2)
-                ret.potassium = roundToDecimal(ret.potassium + food.nf_potassium, 2)
-                ret.protein = roundToDecimal(ret.protein + food.nf_protein, 2)
-                ret.saturated_fat = roundToDecimal(ret.saturated_fat + food.nf_saturated_fat, 2)
-                ret.sodium = roundToDecimal(ret.sodium + food.nf_sodium, 2)
-                ret.sugars = roundToDecimal(ret.sugars + food.nf_sugars, 2)
-                ret.total_carbohydrate = roundToDecimal(ret.total_carbohydrate + food.nf_total_carbohydrate, 2)
-                ret.total_fat = roundToDecimal(ret.total_fat + food.nf_total_fat, 2)
+                ret.calories = roundToDecimal(ret.calories + food.nf_calories, 0)
+                ret.cholesterol = roundToDecimal(ret.cholesterol + food.nf_cholesterol, decimal)
+                ret.dietary_fiber = roundToDecimal(ret.dietary_fiber + food.nf_dietary_fiber, decimal)
+                ret.phosphorus = roundToDecimal(ret.phosphorus + food.nf_p, decimal)
+                ret.potassium = roundToDecimal(ret.potassium + food.nf_potassium, decimal)
+                ret.protein = roundToDecimal(ret.protein + food.nf_protein, decimal)
+                ret.saturated_fat = roundToDecimal(ret.saturated_fat + food.nf_saturated_fat, decimal)
+                ret.sodium = roundToDecimal(ret.sodium + food.nf_sodium, decimal)
+                ret.sugars = roundToDecimal(ret.sugars + food.nf_sugars, decimal)
+                ret.total_carbohydrate = roundToDecimal(ret.total_carbohydrate + food.nf_total_carbohydrate, decimal)
+                ret.total_fat = roundToDecimal(ret.total_fat + food.nf_total_fat, decimal)
             });
 
             return ret;

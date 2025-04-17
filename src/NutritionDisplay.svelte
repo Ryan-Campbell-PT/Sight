@@ -13,7 +13,7 @@
     <div>
         <div class="nutritionLabel">
             <NutritionLabel
-                totalNutritionInfo={nutritionResponse.getTotalNutritionData()}
+                totalNutritionInfo={nutritionResponse.getTotalNutritionData(0)}
                 isVisible={nutritionLabelIsVisible}
             />
         </div>

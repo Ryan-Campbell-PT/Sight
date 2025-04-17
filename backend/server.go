@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -11,9 +12,15 @@ import (
 )
 
 type BodyResponse struct {
-    FoodListString string    `json:"foodListString"`
-    Date string              `json:"date"`
-    SaveToDb bool            `json:"saveToDb"`
+	FoodListString string `json:"foodListString"`
+	Date           string `json:"date"`
+	SaveToDb       bool   `json:"saveToDb"`
+}
+
+type RecipeResponse struct {
+	RecipeName string `json:"recipeName"`
+	FoodString string `json:"foodString"`
+	Servings   int64  `json:"servings"`
 }
 
 func readRequestBody(body io.ReadCloser) ([]byte, error) {
@@ -56,15 +63,15 @@ func sendRequest(req *http.Request) ([]byte, error) {
 
 func post_nutritionixQueryRequest(c *gin.Context) {
 	bodyJson, err := readRequestBody(c.Request.Body)
-	if handleError("Error reading request body: ", err) {
+	if handleError("Error reading query request body: ", err) {
 		return
 	}
 
-    var bodyObj BodyResponse
-    err = json.Unmarshal(bodyJson, &bodyObj)
-    if handleError("Error reading body from request: ", err) {
-        return
-    }
+	var bodyObj BodyResponse
+	err = json.Unmarshal(bodyJson, &bodyObj)
+	if handleError("Error reading body from query request: ", err) {
+		return
+	}
 
 	request, err := buildNutritionixRequest(bodyObj.FoodListString)
 	if handleError("Error building Nutritionix request: ", err) {
@@ -76,14 +83,57 @@ func post_nutritionixQueryRequest(c *gin.Context) {
 		return
 	}
 
-    if bodyObj.SaveToDb {
-        err := saveToDatabase(bodyObj)
-        if handleError("Error saving bodyObj to database: ", err) {
-            return 
-        }
-    }
+	if bodyObj.SaveToDb {
+		err := saveToDatabase_BodyResponse(bodyObj)
+		if handleError("Error saving bodyObj to database: ", err) {
+			return
+		}
+	}
 
 	c.JSON(http.StatusOK, string(responseByteArray))
+}
+
+func post_saveRecipe(c *gin.Context) {
+	body, err := readRequestBody(c.Request.Body)
+	if handleError("Error reading recipe request body: ", err) {
+		return
+	}
+	fmt.Println("Past request body")
+
+	var recipeObj RecipeResponse
+	err = json.Unmarshal(body, &recipeObj)
+	if handleError("Error reading body from recipe request: ", err) {
+		return
+	}
+	fmt.Println("past body recipe request")
+
+	request, err := buildNutritionixRequest(recipeObj.FoodString)
+	if handleError("Error building nutritionix request from recipe: ", err) {
+		return
+	}
+	fmt.Println("past build nutritoin request")
+
+	//this contains the nutrition information (should probably marshal that into a specified nutrition object)
+	responseByteArray, err := sendRequest(request)
+	if handleError("Error sending recipe nutritionix request: ", err) {
+		return
+	}
+	fmt.Println("Past send request")
+
+	var nutritionInfo Food
+	err = json.Unmarshal(responseByteArray, &nutritionInfo)
+	if handleError("Error reading nutrition info from nutritionix response and assigning to Food item: ", err) {
+		return
+	}
+	fmt.Println("Past reading nutirtion info from response")
+
+	err = saveToDatabase_RecipeResponse(recipeObj, nutritionInfo)
+	if handleError("Error saving recipe information to database: ", err) {
+		return
+	}
+	fmt.Println("Past saving ot recipe db")
+
+	c.JSON(http.StatusOK, "")
 }
 
 func runServer() {
@@ -98,6 +148,7 @@ func runServer() {
 	}))
 
 	router.POST("/postFoodList", post_nutritionixQueryRequest)
+	router.POST("/postRecipe", post_saveRecipe)
 
 	router.Run(":8080")
 }

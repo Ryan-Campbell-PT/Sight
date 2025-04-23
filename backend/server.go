@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -18,9 +17,14 @@ type BodyResponse struct {
 }
 
 type RecipeResponse struct {
-	RecipeName string `json:"recipeName"`
-	FoodString string `json:"foodString"`
-	Servings   int64  `json:"servings"`
+	RecipeName string `json:"recipe_name"`
+	FoodString string `json:"food_string"`
+	Servings   int64  `json:"serving_size"`
+	NutritionValuesId	int64 `json:"nutrition_id"`
+}
+
+type GetRecipeResponse struct {
+	RecipeList []Recipe
 }
 
 func readRequestBody(body io.ReadCloser) ([]byte, error) {
@@ -98,42 +102,50 @@ func post_saveRecipe(c *gin.Context) {
 	if handleError("Error reading recipe request body: ", err) {
 		return
 	}
-	fmt.Println("Past request body")
 
 	var recipeObj RecipeResponse
 	err = json.Unmarshal(body, &recipeObj)
 	if handleError("Error reading body from recipe request: ", err) {
 		return
 	}
-	fmt.Println("past body recipe request")
 
 	request, err := buildNutritionixRequest(recipeObj.FoodString)
 	if handleError("Error building nutritionix request from recipe: ", err) {
 		return
 	}
-	fmt.Println("past build nutritoin request")
 
 	//this contains the nutrition information (should probably marshal that into a specified nutrition object)
 	responseByteArray, err := sendRequest(request)
 	if handleError("Error sending recipe nutritionix request: ", err) {
 		return
 	}
-	fmt.Println("Past send request")
 
 	var nutritionInfo Food
 	err = json.Unmarshal(responseByteArray, &nutritionInfo)
 	if handleError("Error reading nutrition info from nutritionix response and assigning to Food item: ", err) {
 		return
 	}
-	fmt.Println("Past reading nutirtion info from response")
 
 	err = saveToDatabase_RecipeResponse(recipeObj, nutritionInfo)
 	if handleError("Error saving recipe information to database: ", err) {
 		return
 	}
-	fmt.Println("Past saving ot recipe db")
 
 	c.JSON(http.StatusOK, "")
+}
+
+func get_recipes(c *gin.Context) {
+	recipes, err := getFromDatabase_Recipes()
+	if handleError("Server.go/Error getting recipes from database: ", err) {
+		c.JSON(http.StatusBadRequest, "")
+	}
+
+	recipeJson, err := json.Marshal(recipes)
+	if handleError("Error marshaling recipeResponse into recipeJson: ", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, string(recipeJson))
 }
 
 func runServer() {
@@ -149,6 +161,7 @@ func runServer() {
 
 	router.POST("/postFoodList", post_nutritionixQueryRequest)
 	router.POST("/postRecipe", post_saveRecipe)
+	router.GET("/getRecipes", get_recipes)
 
 	router.Run(":8080")
 }

@@ -13,6 +13,14 @@ type Daily struct {
 	date       string
 }
 
+type Recipe struct {
+	Id				int64	`json:"id"`
+	Name			string	`json:"recipe_name"`
+	FoodListString	string	`json:"food_string"`
+	ServingSize		int64	`json:"serving_size"`
+	NutritionInfoId	int64	`json:"nutrition_id"`
+}
+
 // this dbOnce variable makes it so no matter how many times you call the function getDatabase()
 // the code inside will only run once
 var (
@@ -146,5 +154,25 @@ func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo Food) erro
 	return nil
 }
 
+func getFromDatabase_Recipes() ([]Recipe, error) {
+	db := getDatabase()
+	var recipeList []Recipe
+
+	response, err := db.Query("SELECT * FROM recipe")
+	if handleError("Database.go/Error grabbing recipes: ", err) {
+		return nil, err
+	}
+	defer response.Close()
+
+	for response.Next() {
+		var recipe Recipe
+		if err := response.Scan(&recipe.Id, &recipe.Name, &recipe.FoodListString, &recipe.ServingSize, &recipe.NutritionInfoId); err != nil {
+			return nil, err
+		}
+		recipeList = append(recipeList, recipe)
+	}
+
+	return recipeList, nil
+}
 // func createInsertStatementFromNutritionInfo(nutInfo Food) string {
 // }

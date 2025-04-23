@@ -1,9 +1,11 @@
 <script lang="ts">
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
-
-    import NutritionDisplay from "../../NutritionDisplay.svelte";
-    import NutritionLabel from "../../NutritionLabel.svelte";
-    import { NutritionResponseObject } from "../../NutritionData"
+        import type { Recipe } from "../../lib/NutritionData";
+    import NutritionDisplay from  "../../lib/NutritionDisplay.svelte"
+    import NutritionLabel from "../../lib/NutritionLabel.svelte";
+    import { NutritionResponseObject, RecipeResponseObject } from "../../lib/NutritionData"
+    import { onMount } from "svelte";
+    import CustomRecipe from "$lib/CustomRecipe.svelte";
     
     function formatDateToYYYYMMDD(date: Date): string {
         const year = date.getFullYear();
@@ -21,6 +23,13 @@
         {
             nutritionResponseObject: new NutritionResponseObject(),
             // with the display variable being created, you may be able to get rid of one of the isVisible variables
+            display: false
+        }
+    )
+    let test: Recipe[] = $state([])
+    let recipeResponse = $state(
+        {
+            recipeResponseObject: new RecipeResponseObject(),
             display: false
         }
     )
@@ -83,8 +92,27 @@
         }
     }
 
+    let get_recipes = async () => {
+        try {
+            const res = await fetch("http://localhost:8080/getRecipes", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            })
+            if(!res.ok) {
+                throw new Error("error getting recipes")
+            }
 
-    // onMount(() => {console.log(currentSelectedDate)})
+            Object.assign(test, JSON.parse(await res.json()))
+            console.log(test)
+            recipeResponse.display = true
+
+        } catch(error) {
+            console.log(error)
+        }
+    }
+
+
+    onMount(() => {get_recipes()})
 </script>
 
 
@@ -141,6 +169,14 @@
                     </div>
                 </div>
             {/if}
+            <div id="recipe-list">
+                <h3> Recipe List </h3>
+                    <ul id="recipes">
+                        {#each test as recipe}
+                            <CustomRecipe recipe={recipe}/>
+                        {/each}
+                    </ul>
+            </div>
 
         </div>
         <div id="nutrition-information" class="col-md-6">
@@ -160,6 +196,6 @@
                     />
                 {/if}
             {/if}
-            </div>
+        </div>
     </div>
 </div>

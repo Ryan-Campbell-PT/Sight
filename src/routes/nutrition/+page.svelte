@@ -2,7 +2,6 @@
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
         import type { Recipe } from "../../lib/NutritionData";
     import NutritionDisplay from  "../../lib/NutritionDisplay.svelte"
-    import NutritionLabel from "../../lib/NutritionLabel.svelte";
     import { NutritionResponseObject, RecipeResponseObject } from "../../lib/NutritionData"
     import { onMount } from "svelte";
     import CustomRecipe from "$lib/CustomRecipe.svelte";
@@ -48,17 +47,20 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             })
-
-            if(!res.ok) {
-                nutritionInfoIsVisible = false
-                nutritionResponse.display = false
-                throw new Error("Failed to fetch")
-            }
-            else {
-                Object.assign(nutritionResponse.nutritionResponseObject, JSON.parse(await res.json()))
+            .then(res => res.json())
+            .then(data => {
+                Object.assign(nutritionResponse.nutritionResponseObject, JSON.parse(data))
+                console.log(nutritionResponse.nutritionResponseObject)
                 nutritionResponse.display = true
                 nutritionInfoIsVisible = true
-            }
+            })
+            .catch(e => {
+                nutritionInfoIsVisible = false
+                nutritionResponse.display = false
+                console.log(e)
+                throw new Error("Failed to fetch")
+            })
+
         } catch(error) {
             console.error(error)
         }
@@ -112,7 +114,7 @@
     }
 
 
-    onMount(() => {get_recipes()})
+    // onMount(() => {get_recipes()})
 </script>
 
 

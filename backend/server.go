@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
+// TODO these have to be organized. all the classes made are a mess, some are for json
+// some are not. should probably make a seperate file for all these definitions, to organize
 type BodyResponse struct {
 	FoodListString string `json:"foodListString"`
 	Date           string `json:"date"`
@@ -17,14 +20,23 @@ type BodyResponse struct {
 }
 
 type RecipeResponse struct {
-	RecipeName string `json:"recipe_name"`
-	FoodString string `json:"food_string"`
-	Servings   int64  `json:"serving_size"`
-	NutritionValuesId	int64 `json:"nutrition_id"`
+	RecipeName        string `json:"recipe_name"`
+	FoodString        string `json:"food_string"`
+	Servings          int64  `json:"serving_size"`
+	NutritionValuesId int64  `json:"nutrition_id"`
 }
 
 type GetRecipeResponse struct {
 	RecipeList []Recipe
+}
+
+type NutritionResponse struct {
+	FoodInfo FoodResponse           `json:"foodInfo"`
+	Errors   []NutritionErrorObject `json:"errors"`
+}
+
+type NutritionErrorObject struct {
+	FoodString string `json:"foodString"`
 }
 
 func readRequestBody(body io.ReadCloser) ([]byte, error) {
@@ -94,7 +106,44 @@ func post_nutritionixQueryRequest(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, string(responseByteArray))
+	// jsonData := string(responseByteArray)
+	response := NutritionResponse{}
+	err = json.Unmarshal(responseByteArray, &response.FoodInfo)
+	handleError("Error unmarshaling json data: ", err)
+
+	splitByComma := strings.Split(bodyObj.FoodListString, ",")
+	// if the api return information that is less than that of what the user typed in, there was an error somewhere
+	if len(splitByComma) > len(response.FoodInfo.Foods) {
+		errorList := []NutritionErrorObject{}
+		foodListIndex := 0
+
+		for _, inputStr := range splitByComma {
+			inputStrTrimmed := strings.TrimSpace(inputStr)
+
+			// If all known foods have been matched, everything else is an error
+			if foodListIndex >= len(response.FoodInfo.Foods) {
+				errorList = append(errorList, NutritionErrorObject{FoodString: inputStrTrimmed})
+				continue
+			}
+
+			// Match input with the current food from response
+			foodName := response.FoodInfo.Foods[foodListIndex].FoodName
+			if strings.Contains(inputStrTrimmed, foodName) {
+				foodListIndex++
+			} else {
+				errorList = append(errorList, NutritionErrorObject{FoodString: inputStrTrimmed})
+			}
+		}
+
+		response.Errors = errorList
+	}
+
+	jsonData, err := json.Marshal(response)
+	if handleError("Error marshaling NutritionResponse: ", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, string(jsonData))
 }
 
 func post_saveRecipe(c *gin.Context) {

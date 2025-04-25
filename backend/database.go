@@ -14,11 +14,11 @@ type Daily struct {
 }
 
 type Recipe struct {
-	Id				int64	`json:"id"`
-	Name			string	`json:"recipe_name"`
-	FoodListString	string	`json:"food_string"`
-	ServingSize		int64	`json:"serving_size"`
-	NutritionInfoId	int64	`json:"nutrition_id"`
+	Id              int64  `json:"id"`
+	Name            string `json:"recipe_name"`
+	FoodListString  string `json:"food_string"`
+	ServingSize     int64  `json:"serving_size"`
+	NutritionInfoId int64  `json:"nutrition_id"`
 }
 
 // this dbOnce variable makes it so no matter how many times you call the function getDatabase()
@@ -127,6 +127,8 @@ func saveToDatabase_BodyResponse(data BodyResponse) error {
 	return nil
 }
 
+// func saveToDatabase_FoodCount(data FoodItem)
+
 func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo Food) error {
 	db := getDatabase()
 	// TODO inserting into database is working correctly
@@ -140,7 +142,7 @@ func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo Food) erro
 	if handleError("Error inserting into Nutrition Table from RecipeResponse", err) {
 		return err
 	}
-	
+
 	nutritionKey, err := response.LastInsertId()
 	if handleError("Error getting nutritionKey in Recipe Response", err) {
 		return err
@@ -174,5 +176,6 @@ func getFromDatabase_Recipes() ([]Recipe, error) {
 
 	return recipeList, nil
 }
+
 // func createInsertStatementFromNutritionInfo(nutInfo Food) string {
 // }

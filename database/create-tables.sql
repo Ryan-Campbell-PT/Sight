@@ -43,4 +43,11 @@ CREATE TABLE recipe (
   PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS food_records;
+CREATE TABLE food_records (
+  id          INT AUTO_INCREMENT NOT NULL,
+  food        VARCHAR(64) NOT NULL,
+  count       INT NOT NULL,
+)
+
 SET foreign_key_checks = 1;

@@ -69,12 +69,23 @@ interface FoodItem {
     tag_id: number | null;
 }
 
+interface NutritionErrorObject {
+    foodString: string
+}
+
+class FoodResponse {
+    foods: FoodItem[] = []
+}
+
 class NutritionResponseObject {
-    foods: FoodItem[] = [];
+    foodInfo: FoodResponse = {
+        foods: []
+    };
+    errors: NutritionErrorObject[] = []
 
     public getTotalNutritionData(decimal: number) : NutritionMacros {
         let ret = new NutritionMacros();
-        this.foods.forEach(food => {
+        this.foodInfo.foods.forEach(food => {
             ret.calories = roundToDecimal(ret.calories + food.nf_calories, 0)
             ret.cholesterol = roundToDecimal(ret.cholesterol + food.nf_cholesterol, decimal)
             ret.dietary_fiber = roundToDecimal(ret.dietary_fiber + food.nf_dietary_fiber, decimal)
@@ -90,7 +101,6 @@ class NutritionResponseObject {
 
         return ret;
     }      
-
 }
 
 class NutritionMacros {
@@ -122,4 +132,4 @@ interface Recipe {
 }
 
 export { NutritionResponseObject, NutritionMacros, RecipeResponseObject }
-export type { FoodItem, Recipe }
+export type { FoodItem, Recipe, NutritionErrorObject }

@@ -2,6 +2,7 @@
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
         import type { Recipe } from "../../lib/NutritionData";
     import NutritionDisplay from  "../../lib/NutritionDisplay.svelte"
+    import NutritionLabel from "../../lib/NutritionLabel.svelte";
     import { NutritionResponseObject, RecipeResponseObject } from "../../lib/NutritionData"
     import { onMount } from "svelte";
     import CustomRecipe from "$lib/CustomRecipe.svelte";
@@ -47,20 +48,18 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             })
-            .then(res => res.json())
-            .then(data => {
-                Object.assign(nutritionResponse.nutritionResponseObject, JSON.parse(data))
+
+            if(!res.ok) {
+                nutritionInfoIsVisible = false
+                nutritionResponse.display = false
+                throw new Error("Failed to fetch")
+            }
+            else {
+                Object.assign(nutritionResponse.nutritionResponseObject, JSON.parse(await res.json()))
                 console.log(nutritionResponse.nutritionResponseObject)
                 nutritionResponse.display = true
                 nutritionInfoIsVisible = true
-            })
-            .catch(e => {
-                nutritionInfoIsVisible = false
-                nutritionResponse.display = false
-                console.log(e)
-                throw new Error("Failed to fetch")
-            })
-
+            }
         } catch(error) {
             console.error(error)
         }
@@ -114,7 +113,7 @@
     }
 
 
-    // onMount(() => {get_recipes()})
+    onMount(() => {get_recipes()})
 </script>
 
 
@@ -123,7 +122,7 @@
 <div class="container">
     <div class="row">
         <!-- this div will contain the food string and date picker -->
-        <div id="first-column-half" class="col-md-6">
+        <div id="first-column-half" class="col-md-6 container">
             <div id="food-list" class="my-2">
                 <!-- this text string assortment can be turned into a reusable class -->
                 <Label for="FoodListString">
@@ -181,7 +180,7 @@
             </div>
 
         </div>
-        <div id="nutrition-information" class="col-md-6">
+        <div id="second-column-half" class="col-md-6 container">
             <!-- this div will display the nutrition label
             and maybe the breakdown, depending on space
             breakdown may be better suited in general middle of page -->

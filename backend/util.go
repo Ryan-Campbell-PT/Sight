@@ -36,11 +36,11 @@ func getEnvironmentVariables() Config {
 func getSqlConfig() mysql.Config {
 	cfg := getEnvironmentVariables()
 	return mysql.Config{
-		User: cfg.User,
-		Passwd: cfg.Password,
-		Net: "tcp",
-		Addr: "127.0.0.1:3306",
-		DBName: "consume",
+		User:                 cfg.User,
+		Passwd:               cfg.Password,
+		Net:                  "tcp",
+		Addr:                 "127.0.0.1:3306",
+		DBName:               "consume",
 		AllowNativePasswords: true,
 	}
 }

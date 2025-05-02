@@ -5,14 +5,11 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-// TODO these have to be organized. all the classes made are a mess, some are for json
-// some are not. should probably make a seperate file for all these definitions, to organize
 type BodyResponse struct {
 	FoodListString string `json:"foodListString"`
 	Date           string `json:"date"`
@@ -28,15 +25,6 @@ type RecipeResponse struct {
 
 type GetRecipeResponse struct {
 	RecipeList []Recipe
-}
-
-type NutritionResponse struct {
-	FoodInfo FoodResponse           `json:"foodInfo"`
-	Errors   []NutritionErrorObject `json:"errors"`
-}
-
-type NutritionErrorObject struct {
-	FoodString string `json:"foodString"`
 }
 
 func readRequestBody(body io.ReadCloser) ([]byte, error) {
@@ -77,73 +65,45 @@ func sendRequest(req *http.Request) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
+// TODO this should be seperated from the request field, and should instead of returning json back to the front end
+// should just return the nutrition info, and let the function that calls it deal with that
+// it should return the byte array, not the string version
 func post_nutritionixQueryRequest(c *gin.Context) {
 	bodyJson, err := readRequestBody(c.Request.Body)
-	if handleError("Error reading query request body: ", err) {
+	if handleError("post_nutritionixQueryRequest/Error reading query request body: ", err) {
 		return
 	}
 
 	var bodyObj BodyResponse
 	err = json.Unmarshal(bodyJson, &bodyObj)
-	if handleError("Error reading body from query request: ", err) {
+	if handleError("post_nutritionixQueryRequest/Error reading body from query request: ", err) {
 		return
 	}
 
 	request, err := buildNutritionixRequest(bodyObj.FoodListString)
-	if handleError("Error building Nutritionix request: ", err) {
+	if handleError("post_nutritionixQueryRequest/Error building Nutritionix request: ", err) {
 		return
 	}
 
 	responseByteArray, err := sendRequest(request)
-	if handleError("Error sending Nutritionix request: ", err) {
+	if handleError("post_nutritionixQueryRequest/Error sending Nutritionix request: ", err) {
 		return
 	}
 
 	if bodyObj.SaveToDb {
-		err := saveToDatabase_BodyResponse(bodyObj)
-		if handleError("Error saving bodyObj to database: ", err) {
+		var nutritionInfo FoodResponse
+		err = json.Unmarshal(responseByteArray, &nutritionInfo)
+		if handleError("post_nutritionixQueryRequest/Error reading nutrition info from nutritionix response and assigning to Food item: ", err) {
+			return
+		}
+
+		err := saveToDatabase_BodyResponse(bodyObj, makeTotalNutritionData(nutritionInfo.Foods))
+		if handleError("post_nutritionixQueryRequest/Error saving bodyObj to database: ", err) {
 			return
 		}
 	}
 
-	// jsonData := string(responseByteArray)
-	response := NutritionResponse{}
-	err = json.Unmarshal(responseByteArray, &response.FoodInfo)
-	handleError("Error unmarshaling json data: ", err)
-
-	splitByComma := strings.Split(bodyObj.FoodListString, ",")
-	// if the api return information that is less than that of what the user typed in, there was an error somewhere
-	if len(splitByComma) > len(response.FoodInfo.Foods) {
-		errorList := []NutritionErrorObject{}
-		foodListIndex := 0
-
-		for _, inputStr := range splitByComma {
-			inputStrTrimmed := strings.TrimSpace(inputStr)
-
-			// If all known foods have been matched, everything else is an error
-			if foodListIndex >= len(response.FoodInfo.Foods) {
-				errorList = append(errorList, NutritionErrorObject{FoodString: inputStrTrimmed})
-				continue
-			}
-
-			// Match input with the current food from response
-			foodName := response.FoodInfo.Foods[foodListIndex].FoodName
-			if strings.Contains(inputStrTrimmed, foodName) {
-				foodListIndex++
-			} else {
-				errorList = append(errorList, NutritionErrorObject{FoodString: inputStrTrimmed})
-			}
-		}
-
-		response.Errors = errorList
-	}
-
-	jsonData, err := json.Marshal(response)
-	if handleError("Error marshaling NutritionResponse: ", err) {
-		return
-	}
-
-	c.JSON(http.StatusOK, string(jsonData))
+	c.JSON(http.StatusOK, string(responseByteArray))
 }
 
 func post_saveRecipe(c *gin.Context) {

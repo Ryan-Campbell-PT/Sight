@@ -64,6 +64,15 @@ type NutritionixNutrient struct {
 	DailyValue *int   `json:"daily_value"`
 }
 
+type NutritionErrorObject struct {
+	FoodString string `json:"foodString"`
+}
+
+type NutritionResponseObject struct {
+	FoodInfo []Food                 `json:"foods"`
+	Errors   []NutritionErrorObject `json:"errors"`
+}
+
 const (
 	NutrientTotalFat           = 204
 	NutrientSaturatedFat       = 606

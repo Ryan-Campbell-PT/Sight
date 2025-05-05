@@ -6,6 +6,7 @@
     import { NutritionResponseObject, RecipeResponseObject } from "../../lib/NutritionData"
     import { onMount } from "svelte";
     import CustomRecipe from "$lib/CustomRecipe.svelte";
+    import { error } from "@sveltejs/kit";
     
     function formatDateToYYYYMMDD(date: Date): string {
         const year = date.getFullYear();
@@ -36,6 +37,11 @@
     let showAddNewRecipe = $state(true)
     let showNutritionBreakdown = $state(true)
 
+    let setNutritionDisplayVisible = (isVisible: boolean) => {
+        nutritionResponse.display = isVisible
+        nutritionInfoIsVisible = isVisible
+    }
+
     let post_foodList = async (saveToDb = false) => {
         const body = {
             foodListString: foodListString_calculate,
@@ -43,25 +49,27 @@
             saveToDb: saveToDb
         }
         try {
-            const res = await fetch("http://localhost:8080/postFoodList", {
+            await fetch("http://localhost:8080/postFoodList", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             })
-
-            if(!res.ok) {
-                nutritionInfoIsVisible = false
-                nutritionResponse.display = false
-                throw new Error("Failed to fetch")
-            }
-            else {
-                Object.assign(nutritionResponse.nutritionResponseObject, JSON.parse(await res.json()))
-                console.log(nutritionResponse.nutritionResponseObject)
-                nutritionResponse.display = true
-                nutritionInfoIsVisible = true
-            }
-        } catch(error) {
-            console.error(error)
+            .then(res => res.json())
+            .then(data => {
+                Object.assign(nutritionResponse.nutritionResponseObject, JSON.parse(data))
+                console.log(JSON.parse(data))
+                // forces Svelte to rerender
+                nutritionResponse = {...nutritionResponse}
+                setNutritionDisplayVisible(true)
+            })
+            .catch(err => {
+                setNutritionDisplayVisible(false)
+                console.log(err)
+                throw new Error(err)
+            })
+        }
+        catch(err) {
+            console.log(err)
         }
     }
 
@@ -89,7 +97,7 @@
             }
         }
         catch(error) {
-                console.log(error)
+            console.log(error)
         }
     }
 
@@ -113,7 +121,7 @@
     }
 
 
-    onMount(() => {get_recipes()})
+    // onMount(() => {get_recipes()})
 </script>
 
 
@@ -181,9 +189,6 @@
 
         </div>
         <div id="second-column-half" class="col-md-6 container">
-            <!-- this div will display the nutrition label
-            and maybe the breakdown, depending on space
-            breakdown may be better suited in general middle of page -->
             {#if nutritionResponse.display}
                 <Label for="displayNutritionBreakdown">
                     Display Nutrition Breakdown?

@@ -30,7 +30,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#each nutritionResponse.foodInfo.foods as food}
+                    {#each nutritionResponse.foods as food}
                         <FoodBreakdown
                             item={food}
                         />

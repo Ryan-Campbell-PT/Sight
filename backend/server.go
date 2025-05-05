@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -90,20 +91,62 @@ func post_nutritionixQueryRequest(c *gin.Context) {
 		return
 	}
 
-	if bodyObj.SaveToDb {
-		var nutritionInfo FoodResponse
-		err = json.Unmarshal(responseByteArray, &nutritionInfo)
-		if handleError("post_nutritionixQueryRequest/Error reading nutrition info from nutritionix response and assigning to Food item: ", err) {
-			return
-		}
+	var nutritionInfo FoodResponse
+	err = json.Unmarshal(responseByteArray, &nutritionInfo)
+	if handleError("post_nutritionixQueryRequest/Error reading nutrition info from nutritionix response and assigning to Food item: ", err) {
+		return
+	}
 
+	response := NutritionResponseObject{FoodInfo: nutritionInfo.Foods}
+
+	// TODO i dont like this
+	response.Errors = helper_checkResponseForErrors(nutritionInfo, bodyObj.FoodListString)
+
+	if bodyObj.SaveToDb {
 		err := saveToDatabase_BodyResponse(bodyObj, makeTotalNutritionData(nutritionInfo.Foods))
 		if handleError("post_nutritionixQueryRequest/Error saving bodyObj to database: ", err) {
 			return
 		}
 	}
 
-	c.JSON(http.StatusOK, string(responseByteArray))
+	responseMarshal, err := json.Marshal(response)
+	if handleError("post_nutritionixQueryRequest/Error marshaling NutritionResponseObject", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, string(responseMarshal))
+}
+
+func helper_checkResponseForErrors(response FoodResponse, foodListString string) []NutritionErrorObject {
+	errorList := []NutritionErrorObject{}
+	splitByComma := strings.Split(foodListString, ",")
+	if len(splitByComma) > len(response.Foods) {
+		responseArrayIndex := 0
+		for _, inputString := range splitByComma {
+			inputStringTrimmed := strings.ToLower(strings.TrimSpace(inputString))
+
+			// If all known foods have been matched, everything else is an error
+			if responseArrayIndex >= len(response.Foods) {
+				errorList = append(errorList, NutritionErrorObject{FoodString: inputStringTrimmed})
+				continue
+			}
+
+			// TODO this will probably need to be looked at, as what was typed may be slightly different
+			// than what the foodName actually is
+
+			// if the string typed by the user contains the food recognized by the api
+			foodName := response.Foods[responseArrayIndex].FoodName
+			if strings.Contains(inputStringTrimmed, foodName) {
+				// then there isnt an issue, and you can move futher along the array
+				responseArrayIndex++
+			} else {
+				// if there is an issue, record the string and add it to the ErrorObject array
+				errorList = append(errorList, NutritionErrorObject{FoodString: inputStringTrimmed})
+			}
+		}
+	}
+
+	return errorList
 }
 
 func post_saveRecipe(c *gin.Context) {

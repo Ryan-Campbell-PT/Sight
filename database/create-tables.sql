@@ -1,7 +1,6 @@
 SET foreign_key_checks = 0;
 
 DROP TABLE IF EXISTS nutrition_info;
--- i think you may want to add additional values to this, like unsaturated fats. but for now this is fine
 CREATE TABLE nutrition_info (
   id              INT AUTO_INCREMENT NOT NULL,
   calories        INT NOT NULL,
@@ -37,6 +36,7 @@ CREATE TABLE recipe (
   recipe_name     VARCHAR(255) NOT NULL,
   food_string     VARCHAR(255) NOT NULL,
   serving_size    INT NOT NULL,
+  active          BIT NOT NULL,
   nutrition_id    INT NOT NULL,
   FOREIGN KEY (nutrition_id) REFERENCES nutrition_info(id),
   INDEX (nutrition_id),
@@ -48,6 +48,7 @@ CREATE TABLE food_records (
   id          INT AUTO_INCREMENT NOT NULL,
   food        VARCHAR(64) NOT NULL,
   count       INT NOT NULL,
-)
+  PRIMARY KEY (id)
+);
 
 SET foreign_key_checks = 1;

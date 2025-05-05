@@ -70,8 +70,13 @@ interface FoodItem {
     tag_id: number | null;
 }
 
+interface NutritionErrorObject {
+    foodString: string;
+}
+
 class NutritionResponseObject {
     foods: FoodItem[] = [];
+    errors: NutritionErrorObject[] = [];
 
     public getTotalNutritionData(decimal: number) : NutritionMacros {
         let ret = new NutritionMacros();
@@ -162,5 +167,5 @@ const NutritionLabelContent: NutritionixNutrient[] = [
 ];
 
 export { NutritionResponseObject, NutritionMacros, RecipeResponseObject, NutritionLabelContent }
-export type { FoodItem, Recipe, NutritionixNutrient }
+export type { FoodItem, Recipe, NutritionixNutrient, NutritionErrorObject }
 

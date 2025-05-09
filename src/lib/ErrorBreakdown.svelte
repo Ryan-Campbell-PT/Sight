@@ -7,6 +7,6 @@
 
 <tr class="error-breakdown ">
     <td colspan={colSpan} class="bg-danger text-nowrap">
-        There was an error with the typed string <b>{error.foodString}</b>
+        There was an error with the typed: <b>{error.errorString}</b>
     </td>
 </tr>

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/go-sql-driver/mysql"
@@ -52,4 +53,9 @@ func handleError(printStr string, err error) bool {
 	}
 
 	return false
+}
+
+func roundToNearestDecimal(num float64, decimal float64) float64 {
+	factor := math.Pow(10, decimal)
+	return math.Round(num*factor) / factor
 }

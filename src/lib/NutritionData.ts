@@ -47,8 +47,8 @@ interface FoodItem {
     nf_protein: number;
     nf_potassium: number;
     nf_p: number;
-    // TODO modify this to be a map in the response object 
     full_nutrients: Nutrient[];
+    full_nutrient_map: Map<number, number>;
     nix_brand_name: string | null;
     nix_brand_id: string | null;
     nix_item_name: string | null;
@@ -71,7 +71,7 @@ interface FoodItem {
 }
 
 interface NutritionErrorObject {
-    foodString: string;
+    errorString: string;
 }
 
 class NutritionResponseObject {

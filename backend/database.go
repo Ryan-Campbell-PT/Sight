@@ -116,7 +116,7 @@ func helper_getDatabase() *sql.DB {
 	return db
 }
 
-func saveToDatabase_BodyResponse(data BodyResponse, nutritionInfo Food) error {
+func saveToDatabase_NutritionInformation(foodListString string, date string, nutritionInfo FoodItem) error {
 	db := helper_getDatabase()
 
 	nutritionKey, err := helper_saveNutritionInfo(nutritionInfo)
@@ -124,7 +124,7 @@ func saveToDatabase_BodyResponse(data BodyResponse, nutritionInfo Food) error {
 		return err
 	}
 
-	_, err = db.Exec("INSERT INTO daily(date, food_string, nutrition_id) VALUES(?, ?, ?)", data.Date, data.FoodListString, nutritionKey)
+	_, err = db.Exec("INSERT INTO daily(food_string, date, nutrition_id) VALUES(?, ?, ?)", foodListString, date, nutritionKey)
 	if handleError("Error inserting body values into database: ", err) {
 		return err
 	}
@@ -132,7 +132,7 @@ func saveToDatabase_BodyResponse(data BodyResponse, nutritionInfo Food) error {
 	return nil
 }
 
-func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo Food) error {
+func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo FoodItem) error {
 	db := helper_getDatabase()
 
 	//TODO inserting into the Nutrition table is going to be cumbersome and frequent
@@ -171,7 +171,7 @@ func getFromDatabase_Recipes() ([]Recipe, error) {
 	return recipeList, nil
 }
 
-func helper_getNutrient(nutritionInfo Food, nutritionId int64) float64 {
+func helper_getNutrient(nutritionInfo FoodItem, nutritionId int64) float64 {
 	for _, n := range nutritionInfo.FullNutrients {
 		if n.AttrID == nutritionId {
 			return n.Value
@@ -181,7 +181,8 @@ func helper_getNutrient(nutritionInfo Food, nutritionId int64) float64 {
 	return 0
 }
 
-func helper_saveNutritionInfo(nutritionInfo Food) (int64, error) {
+func helper_saveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
+	functionName := "helper_saveNutritionInfo"
 	response, err := db.Exec("INSERT INTO nutrition_info(calories, protein, carbs, fiber, cholesterol, sugar, phosphorus, sodium, total_fat, saturated_fat, poly_fat, mono_fat, potassium) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		nutritionInfo.Calories,
 		nutritionInfo.Protein,
@@ -198,12 +199,12 @@ func helper_saveNutritionInfo(nutritionInfo Food) (int64, error) {
 		helper_getNutrient(nutritionInfo, NutrientPotassium),
 	)
 
-	if handleError("Error inserting into Nutrition Table from RecipeResponse", err) {
+	if handleError(functionName+"Error inserting into Nutrition Table from RecipeResponse", err) {
 		return -1, err
 	}
 
 	nutritionKey, err := response.LastInsertId()
-	if handleError("Error getting nutritionKey in Recipe Response", err) {
+	if handleError(functionName+"Error getting nutritionKey in Recipe Response", err) {
 		return -1, err
 	}
 

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"math"
 	"time"
 )
 
@@ -24,35 +22,38 @@ type Photo struct {
 	IsUserUploaded bool   `json:"is_user_uploaded"`
 }
 
-type Food struct {
-	FoodName           string       `json:"food_name"`
-	BrandName          *string      `json:"brand_name"`
-	ServingQty         float64      `json:"serving_qty"`
-	ServingUnit        string       `json:"serving_unit"`
-	ServingWeightGrams float64      `json:"serving_weight_grams"`
-	Calories           float64      `json:"nf_calories"`
-	TotalFat           float64      `json:"nf_total_fat"`
-	SaturatedFat       float64      `json:"nf_saturated_fat"`
-	Cholesterol        float64      `json:"nf_cholesterol"`
-	Sodium             float64      `json:"nf_sodium"`
-	TotalCarbohydrate  float64      `json:"nf_total_carbohydrate"`
-	DietaryFiber       float64      `json:"nf_dietary_fiber"`
-	Sugars             float64      `json:"nf_sugars"`
-	Protein            float64      `json:"nf_protein"`
-	Potassium          float64      `json:"nf_potassium"`
-	Phosphorus         float64      `json:"nf_p"`
-	FullNutrients      []Nutrient   `json:"full_nutrients"`
-	AltMeasures        []AltMeasure `json:"alt_measures"`
-	Photo              Photo        `json:"photo"`
+// FullNutrients is how the Nutritionix API returns its data
+// FullNutrientMap is my modified data structure to turn the regular Nutrient object into a Map collection
+type FoodItem struct {
+	FoodName           string            `json:"food_name"`
+	BrandName          *string           `json:"brand_name"`
+	ServingQty         float64           `json:"serving_qty"`
+	ServingUnit        string            `json:"serving_unit"`
+	ServingWeightGrams float64           `json:"serving_weight_grams"`
+	Calories           float64           `json:"nf_calories"`
+	TotalFat           float64           `json:"nf_total_fat"`
+	SaturatedFat       float64           `json:"nf_saturated_fat"`
+	Cholesterol        float64           `json:"nf_cholesterol"`
+	Sodium             float64           `json:"nf_sodium"`
+	TotalCarbohydrate  float64           `json:"nf_total_carbohydrate"`
+	DietaryFiber       float64           `json:"nf_dietary_fiber"`
+	Sugars             float64           `json:"nf_sugars"`
+	Protein            float64           `json:"nf_protein"`
+	Potassium          float64           `json:"nf_potassium"`
+	Phosphorus         float64           `json:"nf_p"`
+	FullNutrients      []Nutrient        `json:"full_nutrients"`
+	FullNutrientMap    map[int64]float64 `json:"full_nutrient_map"`
+	AltMeasures        []AltMeasure      `json:"alt_measures"`
+	Photo              Photo             `json:"photo"`
 }
 
-type FoodResponse struct {
-	Foods []Food `json:"foods"`
+type Nutritionix_NaturalLanguageResponse struct {
+	Foods []FoodItem `json:"foods"`
 }
 
 type DailyNutrition struct {
-	AllInformation  FoodResponse
-	NutritionValues Food
+	// AllInformation  Nutritionix_NaturalLanguageResponse
+	NutritionValues FoodItem
 	FoodListString  string
 	Date            time.Time
 }
@@ -65,12 +66,13 @@ type NutritionixNutrient struct {
 }
 
 type NutritionErrorObject struct {
-	FoodString string `json:"foodString"`
+	ErrorString string `json:"errorString"`
 }
 
-type NutritionResponseObject struct {
-	FoodInfo []Food                 `json:"foods"`
-	Errors   []NutritionErrorObject `json:"errors"`
+type NaturalLanguageResponseObject struct {
+	ListOfFoods               []FoodItem             `json:"foods"`
+	TotalNutritionInformation FoodItem               `json:"totalNutritionInformation"`
+	Errors                    []NutritionErrorObject `json:"errors"`
 }
 
 const (
@@ -112,35 +114,23 @@ func intPtr(i int) *int {
 	return &i
 }
 
-// TODO im not sure what the variable type needed for this is
-func makeFoodResponse(responseBody string) FoodResponse {
-	var response FoodResponse
-	// TODO may need an additional value besides just err
-	err := json.Unmarshal([]byte(responseBody), &response)
-	if handleError("Error parsing Food Response JSON: ", err) {
-		return response
-	}
-
-	return response
-}
-
 // TODO the work done on the front end should be done instead the back end,
 // maybe adding an additional property to the Response object with total info
-func makeTotalNutritionData(foodList []Food) Food {
-	ret := Food{}
+func makeTotalNutritionData_fromFoodList(foodList []FoodItem) FoodItem {
+	ret := FoodItem{}
 
 	for _, food := range foodList {
-		ret.Calories = ret.Calories + math.Round(food.Calories)
-		ret.Cholesterol = ret.Cholesterol + math.Round(food.Cholesterol)
-		ret.DietaryFiber = ret.DietaryFiber + math.Round(food.DietaryFiber)
-		ret.Phosphorus = ret.Phosphorus + math.Round(food.Phosphorus)
-		ret.Potassium = ret.Potassium + math.Round(food.Potassium)
-		ret.Protein = ret.Protein + math.Round(food.Protein)
-		ret.SaturatedFat = ret.SaturatedFat + math.Round(food.SaturatedFat)
-		ret.Sodium = ret.Sodium + math.Round(food.Sodium)
-		ret.Sugars = ret.Sugars + math.Round(food.Sugars)
-		ret.TotalCarbohydrate = ret.TotalCarbohydrate + math.Round(food.TotalCarbohydrate)
-		ret.TotalFat = ret.TotalFat + math.Round(food.TotalFat)
+		ret.Calories = roundToNearestDecimal(ret.Calories+food.Calories, 2)
+		ret.Cholesterol = roundToNearestDecimal(ret.Cholesterol+food.Cholesterol, 2)
+		ret.DietaryFiber = roundToNearestDecimal(ret.DietaryFiber+food.DietaryFiber, 2)
+		ret.Phosphorus = roundToNearestDecimal(ret.Phosphorus+food.Phosphorus, 2)
+		ret.Potassium = roundToNearestDecimal(ret.Potassium+food.Potassium, 2)
+		ret.Protein = roundToNearestDecimal(ret.Protein+food.Protein, 2)
+		ret.SaturatedFat = roundToNearestDecimal(ret.SaturatedFat+food.SaturatedFat, 2)
+		ret.Sodium = roundToNearestDecimal(ret.Sodium+food.Sodium, 2)
+		ret.Sugars = roundToNearestDecimal(ret.Sugars+food.Sugars, 2)
+		ret.TotalCarbohydrate = roundToNearestDecimal(ret.TotalCarbohydrate+food.TotalCarbohydrate, 2)
+		ret.TotalFat = roundToNearestDecimal(ret.TotalFat+food.TotalFat, 2)
 
 		fullNutrientList := []Nutrient{}
 		for _, n := range food.FullNutrients {
@@ -155,19 +145,24 @@ func makeTotalNutritionData(foodList []Food) Food {
 		}
 
 		ret.FullNutrients = fullNutrientList
+
+		fullNutrientMap := make(map[int64]float64)
+		for key, value := range food.FullNutrientMap {
+			fullNutrientMap[key] = roundToNearestDecimal(ret.FullNutrientMap[key]+value, 2)
+		}
+
+		ret.FullNutrientMap = fullNutrientMap
 	}
 
 	return ret
 }
 
-func makeDailyNutrition(foodList FoodResponse, date string) DailyNutrition {
-	parseDate, err := time.Parse(time.DateOnly, date)
-	handleError("Error parsing date for Daily Nutrition: ", err)
-	ret := DailyNutrition{
-		// AllInformation: foodList,
-		Date:            parseDate,
-		NutritionValues: makeTotalNutritionData(foodList.Foods),
+func createNutrientMap(nutrientList []Nutrient) map[int64]float64 {
+	nutrientMap := make(map[int64]float64)
+
+	for _, n := range nutrientList {
+		nutrientMap[n.AttrID] = n.Value
 	}
 
-	return ret
+	return nutrientMap
 }

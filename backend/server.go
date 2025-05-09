@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type BodyResponse struct {
+type PostFoodList_RequestBody struct {
 	FoodListString string `json:"foodListString"`
 	Date           string `json:"date"`
 	SaveToDb       bool   `json:"saveToDb"`
@@ -34,7 +34,7 @@ func readRequestBody(body io.ReadCloser) ([]byte, error) {
 	return data, err
 }
 
-func buildNutritionixRequest(foodList string) (*http.Request, error) {
+func buildNutritionixRequest_fromFoodListString(foodList string) (*http.Request, error) {
 	cfg := getEnvironmentVariables()
 	foodQuery := map[string]string{"query": foodList}
 	body, err := json.Marshal(foodQuery)
@@ -55,7 +55,7 @@ func buildNutritionixRequest(foodList string) (*http.Request, error) {
 	return request, nil
 }
 
-func sendRequest(req *http.Request) ([]byte, error) {
+func sendHttpRequest(req *http.Request) ([]byte, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -66,68 +66,58 @@ func sendRequest(req *http.Request) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-// TODO this should be seperated from the request field, and should instead of returning json back to the front end
-// should just return the nutrition info, and let the function that calls it deal with that
-// it should return the byte array, not the string version
-func post_nutritionixQueryRequest(c *gin.Context) {
-	bodyJson, err := readRequestBody(c.Request.Body)
-	if handleError("post_nutritionixQueryRequest/Error reading query request body: ", err) {
-		return
+// this function will take the list of foods provided by a user
+// and handle all the work associated with that string:
+// marshaling/unmarshaling, reaching out to api, building response object
+func buildNutritionixResponse_fromFoodListString(foodListString string) (Nutritionix_NaturalLanguageResponse, error) {
+	functionName := "handle_naturalLanguage_foodList/"
+	var nutritionInfo Nutritionix_NaturalLanguageResponse
+
+	request, err := buildNutritionixRequest_fromFoodListString(foodListString)
+	if handleError(functionName+"Error building Nutritionix request: ", err) {
+		return nutritionInfo, err
 	}
 
-	var bodyObj BodyResponse
-	err = json.Unmarshal(bodyJson, &bodyObj)
-	if handleError("post_nutritionixQueryRequest/Error reading body from query request: ", err) {
-		return
+	responseByteArray, err := sendHttpRequest(request)
+	if handleError(functionName+"Error sending Nutritionix request: ", err) {
+		return nutritionInfo, err
 	}
 
-	request, err := buildNutritionixRequest(bodyObj.FoodListString)
-	if handleError("post_nutritionixQueryRequest/Error building Nutritionix request: ", err) {
-		return
-	}
-
-	responseByteArray, err := sendRequest(request)
-	if handleError("post_nutritionixQueryRequest/Error sending Nutritionix request: ", err) {
-		return
-	}
-
-	var nutritionInfo FoodResponse
 	err = json.Unmarshal(responseByteArray, &nutritionInfo)
-	if handleError("post_nutritionixQueryRequest/Error reading nutrition info from nutritionix response and assigning to Food item: ", err) {
-		return
+	if handleError(functionName+"Error reading nutrition info from nutritionix response and unmarshaling to Food item: ", err) {
+		return nutritionInfo, err
 	}
 
-	response := NutritionResponseObject{FoodInfo: nutritionInfo.Foods}
-
-	// TODO i dont like this
-	response.Errors = helper_checkResponseForErrors(nutritionInfo, bodyObj.FoodListString)
-
-	if bodyObj.SaveToDb {
-		err := saveToDatabase_BodyResponse(bodyObj, makeTotalNutritionData(nutritionInfo.Foods))
-		if handleError("post_nutritionixQueryRequest/Error saving bodyObj to database: ", err) {
-			return
-		}
+	for i, food := range nutritionInfo.Foods {
+		nMap := createNutrientMap(food.FullNutrients)
+		food.FullNutrientMap = nMap
+		nutritionInfo.Foods[i] = food
 	}
 
-	responseMarshal, err := json.Marshal(response)
-	if handleError("post_nutritionixQueryRequest/Error marshaling NutritionResponseObject", err) {
-		return
-	}
-
-	c.JSON(http.StatusOK, string(responseMarshal))
+	return nutritionInfo, nil
 }
 
-func helper_checkResponseForErrors(response FoodResponse, foodListString string) []NutritionErrorObject {
+func getTotalNutritionInformation_fromFoodListString(foodListString string) (FoodItem, error) {
+	functionName := "getTotalNutritionInformation_fromFoodListString/"
+	nutritionInfo, err := buildNutritionixResponse_fromFoodListString(foodListString)
+	if handleError(functionName+"Error getting response from foodliststring: ", err) {
+		return FoodItem{}, err
+	}
+
+	return makeTotalNutritionData_fromFoodList(nutritionInfo.Foods), nil
+}
+
+func helper_checkFoodArrayForErrors(foodListString string, foods []FoodItem) []NutritionErrorObject {
 	errorList := []NutritionErrorObject{}
 	splitByComma := strings.Split(foodListString, ",")
-	if len(splitByComma) > len(response.Foods) {
+	if len(splitByComma) > len(foods) {
 		responseArrayIndex := 0
 		for _, inputString := range splitByComma {
 			inputStringTrimmed := strings.ToLower(strings.TrimSpace(inputString))
 
 			// If all known foods have been matched, everything else is an error
-			if responseArrayIndex >= len(response.Foods) {
-				errorList = append(errorList, NutritionErrorObject{FoodString: inputStringTrimmed})
+			if responseArrayIndex >= len(foods) {
+				errorList = append(errorList, NutritionErrorObject{ErrorString: inputStringTrimmed})
 				continue
 			}
 
@@ -135,13 +125,13 @@ func helper_checkResponseForErrors(response FoodResponse, foodListString string)
 			// than what the foodName actually is
 
 			// if the string typed by the user contains the food recognized by the api
-			foodName := response.Foods[responseArrayIndex].FoodName
+			foodName := foods[responseArrayIndex].FoodName
 			if strings.Contains(inputStringTrimmed, foodName) {
 				// then there isnt an issue, and you can move futher along the array
 				responseArrayIndex++
 			} else {
 				// if there is an issue, record the string and add it to the ErrorObject array
-				errorList = append(errorList, NutritionErrorObject{FoodString: inputStringTrimmed})
+				errorList = append(errorList, NutritionErrorObject{ErrorString: inputStringTrimmed})
 			}
 		}
 	}
@@ -149,37 +139,72 @@ func helper_checkResponseForErrors(response FoodResponse, foodListString string)
 	return errorList
 }
 
+func post_foodList(c *gin.Context) {
+	functionName := "post_foodList/"
+
+	// read the request body
+	bodyJson, err := readRequestBody(c.Request.Body)
+	if handleError(functionName+"Error reading query request body: ", err) {
+		return
+	}
+
+	// put the request body into an object
+	var bodyObj PostFoodList_RequestBody
+	err = json.Unmarshal(bodyJson, &bodyObj)
+	if handleError(functionName+"Error reading body from query request: ", err) {
+		return
+	}
+
+	// pass in the foodListString, get back the information from the api
+	naturalLanguageResponseObject, err := buildNutritionixResponse_fromFoodListString(bodyObj.FoodListString)
+	if handleError(functionName+"Error handling food list from request body: ", err) {
+		return
+	}
+
+	ret := NaturalLanguageResponseObject{
+		ListOfFoods:               naturalLanguageResponseObject.Foods,
+		TotalNutritionInformation: makeTotalNutritionData_fromFoodList(naturalLanguageResponseObject.Foods),
+		Errors:                    helper_checkFoodArrayForErrors(bodyObj.FoodListString, naturalLanguageResponseObject.Foods),
+		// TODO i dont like this
+	}
+
+	if bodyObj.SaveToDb {
+		// save this information to the Daily table
+		err = saveToDatabase_NutritionInformation(bodyObj.FoodListString, bodyObj.Date, ret.TotalNutritionInformation)
+		if handleError(functionName+"Error saving nutrition info to database: ", err) {
+			return
+		}
+	}
+
+	// create return object
+	responseMarshal, err := json.Marshal(ret)
+	if handleError(functionName+"Error marshalling NutritionResponseObject", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, string(responseMarshal))
+}
+
 func post_saveRecipe(c *gin.Context) {
+	functionName := "post_saveRecipe/"
 	body, err := readRequestBody(c.Request.Body)
-	if handleError("Error reading recipe request body: ", err) {
+	if handleError(functionName+"Error reading recipe request body: ", err) {
 		return
 	}
 
 	var recipeObj RecipeResponse
 	err = json.Unmarshal(body, &recipeObj)
-	if handleError("Error reading body from recipe request: ", err) {
+	if handleError(functionName+"Error reading body from recipe request: ", err) {
 		return
 	}
 
-	request, err := buildNutritionixRequest(recipeObj.FoodString)
-	if handleError("Error building nutritionix request from recipe: ", err) {
-		return
-	}
-
-	//this contains the nutrition information (should probably marshal that into a specified nutrition object)
-	responseByteArray, err := sendRequest(request)
-	if handleError("Error sending recipe nutritionix request: ", err) {
-		return
-	}
-
-	var nutritionInfo Food
-	err = json.Unmarshal(responseByteArray, &nutritionInfo)
-	if handleError("Error reading nutrition info from nutritionix response and assigning to Food item: ", err) {
+	nutritionInfo, err := getTotalNutritionInformation_fromFoodListString(recipeObj.FoodString)
+	if handleError(functionName+"Error getting total nutrition info from food string: ", err) {
 		return
 	}
 
 	err = saveToDatabase_RecipeResponse(recipeObj, nutritionInfo)
-	if handleError("Error saving recipe information to database: ", err) {
+	if handleError(functionName+"Error saving recipe information to database: ", err) {
 		return
 	}
 
@@ -211,7 +236,7 @@ func runServer() {
 		AllowCredentials: true,
 	}))
 
-	router.POST("/postFoodList", post_nutritionixQueryRequest)
+	router.POST("/postFoodList", post_foodList)
 	router.POST("/postRecipe", post_saveRecipe)
 	router.GET("/getRecipes", get_recipes)
 

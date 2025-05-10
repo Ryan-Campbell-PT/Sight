@@ -18,6 +18,12 @@ type Config struct {
 	Nutritionix_domain          string `env:"nutrition__domain"`
 	Nutritionix_naturalLanguage string `env:"nutrition__naturalLanguage"`
 	Nutritionix_contentType     string `env:"nutrition__contentType"`
+
+	Azure_User     string `env:"Azure_User"`
+	Azure_Password string `env:"Azure_Password"`
+	Azure_Database string `env:"Azure_Database"`
+	Azure_Server   string `env:"Azure_Server"`
+	Azure_Port     int64  `env:"Azure_Port"`
 }
 
 func getEnvironmentVariables() Config {
@@ -44,6 +50,21 @@ func getSqlConfig() mysql.Config {
 		DBName:               "consume",
 		AllowNativePasswords: true,
 	}
+}
+
+var server = "pt-industries.database.windows.net"
+var port = 1433
+var user = "PT-Industries-Lyon"
+var password = "Pod-Around-Relation"
+var database = "consume"
+
+func getMsSqlConnectionString() string {
+	return fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
+		server, user, password, port, database)
+
+	// cfg := getEnvironmentVariables()
+	// return fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
+	// 	cfg.Azure_Server, cfg.Azure_User, cfg.Azure_Password, cfg.Azure_Port, cfg.Azure_Database)
 }
 
 func handleError(printStr string, err error) bool {

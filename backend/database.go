@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"sync"
+
+	_ "github.com/microsoft/go-mssqldb"
 )
 
 type Daily struct {
@@ -27,30 +29,6 @@ var (
 	db     *sql.DB
 	dbOnce sync.Once
 )
-
-func IRRELEVANT() {
-	// Capture connection properties.
-	// Get a database handle
-	cfg := getSqlConfig()
-	var err error
-	db, err = sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
-	}
-
-	fmt.Println("Connected!")
-
-	dailyValues, err := dailyQuery("1/1/2025")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("daily Values: %v\n", dailyValues)
-}
 
 func dailyQuery(date string) ([]Daily, error) {
 	var daily []Daily
@@ -116,15 +94,34 @@ func helper_getDatabase() *sql.DB {
 	return db
 }
 
+func helper_getMsSqlDatabase() *sql.DB {
+	functionName := "helper_getMsSqlDatabase/"
+	dbOnce.Do(func() {
+		dbObj, err := sql.Open("sqlserver", getMsSqlConnectionString())
+		if handleError(functionName+"Error connecting to MsSql db: ", err) {
+			return
+		}
+
+		db = dbObj
+	})
+
+	return db
+}
+
 func saveToDatabase_NutritionInformation(foodListString string, date string, nutritionInfo FoodItem) error {
-	db := helper_getDatabase()
+	db := helper_getMsSqlDatabase()
 
 	nutritionKey, err := helper_saveNutritionInfo(nutritionInfo)
 	if handleError("saveToDatabase_BodyResponse/Error saving nutrition info to DB: ", err) {
 		return err
 	}
 
-	_, err = db.Exec("INSERT INTO daily(food_string, date, nutrition_id) VALUES(?, ?, ?)", foodListString, date, nutritionKey)
+	_, err = db.Exec(`INSERT INTO daily(food_string, date, nutrition_id) VALUES(@FoodListString, @Date, @NutritionKey)`,
+		sql.Named("FoodListString", foodListString),
+		sql.Named("Date", date),
+		sql.Named("NutritionKey", nutritionKey),
+	)
+
 	if handleError("Error inserting body values into database: ", err) {
 		return err
 	}
@@ -133,7 +130,7 @@ func saveToDatabase_NutritionInformation(foodListString string, date string, nut
 }
 
 func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo FoodItem) error {
-	db := helper_getDatabase()
+	db := helper_getMsSqlDatabase()
 
 	//TODO inserting into the Nutrition table is going to be cumbersome and frequent
 	//some function should be made to automate that
@@ -142,7 +139,14 @@ func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo FoodItem) 
 		return err
 	}
 
-	_, err = db.Exec("INSERT INTO recipe(recipe_name, food_string, serving_size, nutrition_id) VALUES(?, ?, ?, ?)", data.RecipeName, data.FoodString, 1, nutritionKey)
+	_, err = db.Exec(`INSERT INTO recipe(nutrition_id, recipe_name, food_string, serving_size)
+		VALUES(@NutritionKey, @RecipeName, @FoodString, @ServingSize)`,
+		sql.Named("NutritionKey", nutritionKey),
+		sql.Named("Calories", nutritionInfo.Calories),
+		sql.Named("RecipeName", data.RecipeName),
+		sql.Named("FoodString", data.FoodString),
+	)
+
 	if handleError("Error inserting into Recipe Table from Recipe Response", err) {
 		return err
 	}
@@ -151,7 +155,7 @@ func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo FoodItem) 
 }
 
 func getFromDatabase_Recipes() ([]Recipe, error) {
-	db := helper_getDatabase()
+	db := helper_getMsSqlDatabase()
 	var recipeList []Recipe
 
 	response, err := db.Query("SELECT * FROM recipe")
@@ -182,29 +186,33 @@ func helper_getNutrient(nutritionInfo FoodItem, nutritionId int64) float64 {
 }
 
 func helper_saveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
-	functionName := "helper_saveNutritionInfo"
-	response, err := db.Exec("INSERT INTO nutrition_info(calories, protein, carbs, fiber, cholesterol, sugar, phosphorus, sodium, total_fat, saturated_fat, poly_fat, mono_fat, potassium) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		nutritionInfo.Calories,
-		nutritionInfo.Protein,
-		nutritionInfo.TotalCarbohydrate,
-		nutritionInfo.DietaryFiber,
-		nutritionInfo.Cholesterol,
-		nutritionInfo.Sugars,
-		nutritionInfo.Phosphorus,
-		nutritionInfo.Sodium,
-		nutritionInfo.TotalFat,
-		nutritionInfo.SaturatedFat,
-		helper_getNutrient(nutritionInfo, NutrientPolyunsaturatedFat),
-		helper_getNutrient(nutritionInfo, NutrientMonounsaturatedFat),
-		helper_getNutrient(nutritionInfo, NutrientPotassium),
+	row := db.QueryRow(`
+		INSERT INTO nutrition_info (
+			calories, protein, carbs, fiber, cholesterol, sugar,
+			phosphorus, sodium, total_fat, saturated_fat, poly_fat, mono_fat, potassium
+		) VALUES (
+			@Calories, @Protein, @Carbs, @Fiber, @Cholesterol, @Sugar,
+			@Phosphorus, @Sodium, @TotalFat, @SaturatedFat, @PolyFat, @MonoFat, @Potassium
+		);
+		SELECT ID = CONVERT(BIGINT, SCOPE_IDENTITY());
+	`,
+		sql.Named("Calories", nutritionInfo.Calories),
+		sql.Named("Protein", nutritionInfo.Protein),
+		sql.Named("Carbs", nutritionInfo.TotalCarbohydrate),
+		sql.Named("Fiber", nutritionInfo.DietaryFiber),
+		sql.Named("Cholesterol", nutritionInfo.Cholesterol),
+		sql.Named("Sugar", nutritionInfo.Sugars),
+		sql.Named("Phosphorus", nutritionInfo.Phosphorus),
+		sql.Named("Sodium", nutritionInfo.Sodium),
+		sql.Named("TotalFat", nutritionInfo.TotalFat),
+		sql.Named("SaturatedFat", nutritionInfo.SaturatedFat),
+		sql.Named("PolyFat", helper_getNutrient(nutritionInfo, NutrientPolyunsaturatedFat)),
+		sql.Named("MonoFat", helper_getNutrient(nutritionInfo, NutrientMonounsaturatedFat)),
+		sql.Named("Potassium", helper_getNutrient(nutritionInfo, NutrientPotassium)),
 	)
-
-	if handleError(functionName+"Error inserting into Nutrition Table from RecipeResponse", err) {
-		return -1, err
-	}
-
-	nutritionKey, err := response.LastInsertId()
-	if handleError(functionName+"Error getting nutritionKey in Recipe Response", err) {
+	var nutritionKey int64
+	err := row.Scan(&nutritionKey)
+	if handleError("Error getting nutritionKey from Recipe Response", err) {
 		return -1, err
 	}
 

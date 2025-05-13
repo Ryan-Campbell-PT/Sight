@@ -6,7 +6,6 @@ import (
 	"math"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -26,7 +25,7 @@ type Config struct {
 	Azure_Port     int64  `env:"Azure_Port"`
 }
 
-func getEnvironmentVariables() Config {
+func getConfig() Config {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatalf("unable to load .env file")
@@ -38,33 +37,6 @@ func getEnvironmentVariables() Config {
 	}
 
 	return cfg
-}
-
-func getSqlConfig() mysql.Config {
-	cfg := getEnvironmentVariables()
-	return mysql.Config{
-		User:                 cfg.User,
-		Passwd:               cfg.Password,
-		Net:                  "tcp",
-		Addr:                 "127.0.0.1:3306",
-		DBName:               "consume",
-		AllowNativePasswords: true,
-	}
-}
-
-var server = "pt-industries.database.windows.net"
-var port = 1433
-var user = "PT-Industries-Lyon"
-var password = "Pod-Around-Relation"
-var database = "consume"
-
-func getMsSqlConnectionString() string {
-	return fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
-		server, user, password, port, database)
-
-	// cfg := getEnvironmentVariables()
-	// return fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
-	// 	cfg.Azure_Server, cfg.Azure_User, cfg.Azure_Password, cfg.Azure_Port, cfg.Azure_Database)
 }
 
 func handleError(printStr string, err error) bool {

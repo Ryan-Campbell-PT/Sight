@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 
 	_ "github.com/microsoft/go-mssqldb"
@@ -11,8 +10,8 @@ import (
 
 type Daily struct {
 	ID         int64
-	foodString string
-	date       string
+	FoodString string
+	Date       string
 }
 
 type Recipe struct {
@@ -30,6 +29,31 @@ var (
 	dbOnce sync.Once
 )
 
+func getMsSqlConnectionString() string {
+	cfg := getConfig()
+
+	return fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
+		cfg.Azure_Server, cfg.Azure_User, cfg.Azure_Password, cfg.Azure_Port, cfg.Azure_Database)
+}
+
+func getDatabase() *sql.DB {
+	return helper_getMsSqlDatabase()
+}
+
+func helper_getMsSqlDatabase() *sql.DB {
+	functionName := "helper_getMsSqlDatabase/"
+	dbOnce.Do(func() {
+		dbObj, err := sql.Open("sqlserver", getMsSqlConnectionString())
+		if handleError(functionName+"Error connecting to MsSql db: ", err) {
+			return
+		}
+
+		db = dbObj
+	})
+
+	return db
+}
+
 func dailyQuery(date string) ([]Daily, error) {
 	var daily []Daily
 
@@ -41,7 +65,7 @@ func dailyQuery(date string) ([]Daily, error) {
 
 	for rows.Next() {
 		var day Daily
-		if err := rows.Scan(&day.ID, &day.foodString, &day.date); err != nil {
+		if err := rows.Scan(&day.ID, &day.FoodString, &day.Date); err != nil {
 			return nil, fmt.Errorf("dailyQuery %q: %v", date, err)
 		}
 		daily = append(daily, day)
@@ -76,42 +100,10 @@ func visualizationTest_queryForDailyCalories() ([]Daily, error) {
 }
 */
 
-func helper_getDatabase() *sql.DB {
-	dbOnce.Do(func() {
-		cfg := getSqlConfig()
-		dbObj, err := sql.Open("mysql", cfg.FormatDSN())
-		if err != nil {
-			log.Fatal(err)
-		}
+func saveToDatabase_DailyRecord(foodListString string, date string, nutritionInfo FoodItem) error {
+	db := getDatabase()
 
-		pingErr := dbObj.Ping()
-		if pingErr != nil {
-			log.Fatal(pingErr)
-		}
-		db = dbObj
-	})
-
-	return db
-}
-
-func helper_getMsSqlDatabase() *sql.DB {
-	functionName := "helper_getMsSqlDatabase/"
-	dbOnce.Do(func() {
-		dbObj, err := sql.Open("sqlserver", getMsSqlConnectionString())
-		if handleError(functionName+"Error connecting to MsSql db: ", err) {
-			return
-		}
-
-		db = dbObj
-	})
-
-	return db
-}
-
-func saveToDatabase_NutritionInformation(foodListString string, date string, nutritionInfo FoodItem) error {
-	db := helper_getMsSqlDatabase()
-
-	nutritionKey, err := helper_saveNutritionInfo(nutritionInfo)
+	nutritionId, err := helper_saveNutritionInfo(nutritionInfo)
 	if handleError("saveToDatabase_BodyResponse/Error saving nutrition info to DB: ", err) {
 		return err
 	}
@@ -119,7 +111,7 @@ func saveToDatabase_NutritionInformation(foodListString string, date string, nut
 	_, err = db.Exec(`INSERT INTO daily(food_string, date, nutrition_id) VALUES(@FoodListString, @Date, @NutritionKey)`,
 		sql.Named("FoodListString", foodListString),
 		sql.Named("Date", date),
-		sql.Named("NutritionKey", nutritionKey),
+		sql.Named("NutritionKey", nutritionId),
 	)
 
 	if handleError("Error inserting body values into database: ", err) {
@@ -129,8 +121,40 @@ func saveToDatabase_NutritionInformation(foodListString string, date string, nut
 	return nil
 }
 
+// TODO it makes more sense to have the whole class as the parameter,
+// so you dont have to modify the function parameters if anything changes in the class
+// but I dont like having that ugly class name as a function parameter,
+// especially since you just recently hange all the functions to NOT include the Request/Response objs
+func saveToDatabase_Recipe(data PostRecipe_RequestBody, nutritionId int64) error {
+	functionName := "saveToDatabase_Recipe/"
+	db := getDatabase()
+
+	_, err := db.Exec(`INSERT INTO recipe(recipe_name, food_string, serving_size, active, nutrition_id)
+			VALUES (@RecipeName, @FoodString, @ServingSize, @Active, @NutritionId)`,
+		sql.Named("RecipeName", data.RecipeName),
+		sql.Named("FoodString", data.FoodListString),
+		sql.Named("ServingSize", data.NumServings),
+		sql.Named("Active", true),
+		sql.Named("NutritionId", nutritionId),
+	)
+
+	if handleError(functionName+"Error saving recipe information to db: ", err) {
+		return err
+	}
+
+	return nil
+}
+
+func saveToDatabase_NutritionInformation(nutritionInfo FoodItem) (int64, error) {
+	nutritionKey, err := helper_saveNutritionInfo(nutritionInfo)
+	if handleError("saveToDatabase_BodyResponse/Error saving nutrition info to DB: ", err) {
+		return -1, err
+	}
+	return nutritionKey, nil
+}
+
 func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo FoodItem) error {
-	db := helper_getMsSqlDatabase()
+	db := getDatabase()
 
 	//TODO inserting into the Nutrition table is going to be cumbersome and frequent
 	//some function should be made to automate that
@@ -176,16 +200,12 @@ func getFromDatabase_Recipes() ([]Recipe, error) {
 }
 
 func helper_getNutrient(nutritionInfo FoodItem, nutritionId int64) float64 {
-	for _, n := range nutritionInfo.FullNutrients {
-		if n.AttrID == nutritionId {
-			return n.Value
-		}
-	}
-
-	return 0
+	return nutritionInfo.FullNutrientMap[nutritionId]
 }
 
 func helper_saveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
+	db := getDatabase()
+
 	row := db.QueryRow(`
 		INSERT INTO nutrition_info (
 			calories, protein, carbs, fiber, cholesterol, sugar,

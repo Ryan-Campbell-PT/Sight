@@ -24,6 +24,13 @@ type RecipeResponse struct {
 	NutritionValuesId int64  `json:"nutrition_id"`
 }
 
+// aligns with RecipeRequestObject
+type PostRecipe_RequestBody struct {
+	RecipeName     string `json:"recipeName"`
+	FoodListString string `json:"foodListString"`
+	NumServings    int64  `json:"numServings"`
+}
+
 type GetRecipeResponse struct {
 	RecipeList []Recipe
 }
@@ -35,7 +42,7 @@ func readRequestBody(body io.ReadCloser) ([]byte, error) {
 }
 
 func buildNutritionixRequest_fromFoodListString(foodList string) (*http.Request, error) {
-	cfg := getEnvironmentVariables()
+	cfg := getConfig()
 	foodQuery := map[string]string{"query": foodList}
 	body, err := json.Marshal(foodQuery)
 	if err != nil {
@@ -168,13 +175,15 @@ func post_foodList(c *gin.Context) {
 		// TODO i dont like this
 	}
 
-	if bodyObj.SaveToDb {
+	//i dont think this need to exist, it can be reworked
+	/* if bodyObj.SaveToDb {
 		// save this information to the Daily table
 		err = saveToDatabase_NutritionInformation(bodyObj.FoodListString, bodyObj.Date, ret.TotalNutritionInformation)
 		if handleError(functionName+"Error saving nutrition info to database: ", err) {
 			return
 		}
 	}
+	*/
 
 	// create return object
 	responseMarshal, err := json.Marshal(ret)
@@ -192,19 +201,24 @@ func post_saveRecipe(c *gin.Context) {
 		return
 	}
 
-	var recipeObj RecipeResponse
+	var recipeObj PostRecipe_RequestBody
 	err = json.Unmarshal(body, &recipeObj)
 	if handleError(functionName+"Error reading body from recipe request: ", err) {
 		return
 	}
 
-	nutritionInfo, err := getTotalNutritionInformation_fromFoodListString(recipeObj.FoodString)
+	nutritionInfo, err := getTotalNutritionInformation_fromFoodListString(recipeObj.FoodListString)
 	if handleError(functionName+"Error getting total nutrition info from food string: ", err) {
 		return
 	}
 
-	err = saveToDatabase_RecipeResponse(recipeObj, nutritionInfo)
-	if handleError(functionName+"Error saving recipe information to database: ", err) {
+	nutritionId, err := saveToDatabase_NutritionInformation(nutritionInfo)
+	if handleError(functionName+"Error saving nutrition information to database: ", err) {
+		return
+	}
+
+	err = saveToDatabase_Recipe(recipeObj, nutritionId)
+	if handleError(functionName+"Error saving recipe: ", err) {
 		return
 	}
 

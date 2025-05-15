@@ -76,38 +76,63 @@ type NaturalLanguageResponseObject struct {
 }
 
 const (
-	NutrientTotalFat           = 204
-	NutrientSaturatedFat       = 606
-	NutrientTransFat           = 605
-	NutrientPolyunsaturatedFat = 646
-	NutrientMonounsaturatedFat = 645
-	NutrientProtein            = 203
-	NutrientSugar              = 269
-	NutrientSodium             = 307
-	NutrientDietaryFiber       = 291
-	NutrientCholesterol        = 601
-	NutrientPotassium          = 306
-	NutrientIron               = 303
-	NutrientCaffeine           = 262
+	CaloriesString           = "Calories"
+	TotalCarbohydrateString  = "Total Carbohydrate"
+	TotalFatString           = "Total Fat"
+	SaturatedFatString       = "Saturated Fat"
+	TransFatString           = "Trans Fat"
+	PolyunsaturatedFatString = "Polyunsaturated Fat"
+	MonounsaturatedFatString = "Monounsaturated Fat"
+	ProteinString            = "Protein"
+	SugarString              = "Sugar"
+	SodiumString             = "Sodium"
+	DietaryFiberString       = "Dietary Fiber"
+	CholesterolString        = "Cholesterol"
+	PotassiumString          = "Potassium"
+	IronString               = "Iron"
+	CaffeineString           = "Caffeine"
+	PhosphorusString         = "Phosphorus"
+)
+
+const (
+	CaloriesId           = 208
+	TotalCarbohydrateId  = 205
+	TotalFatId           = 204
+	SaturatedFatId       = 606
+	TransFatId           = 605
+	PolyunsaturatedFatId = 646
+	MonounsaturatedFatId = 645
+	ProteinId            = 203
+	SugarId              = 269
+	SodiumId             = 307
+	DietaryFiberId       = 291
+	CholesterolId        = 601
+	PotassiumId          = 306
+	IronId               = 303
+	CaffeineId           = 262
+	PhosphorusId         = 305
 )
 
 // id values from https://docx.syndigo.com/developers/docs/list-of-all-nutrients-and-nutrient-ids-from-api
 // daily values taken from https://www.fda.gov/food/nutrition-facts-label/how-understand-and-use-nutrition-facts-label
 // when making updates, be sure to update NutritionData.ts/NutritionLabelContent
 var NutritionLabelContent = []NutritionixNutrient{
-	{ID: 204, MacroName: "Total Fat", Unit: "g", DailyValue: intPtr(78)},
-	{ID: 606, MacroName: "Saturated Fat", Unit: "g", DailyValue: nil},
-	{ID: 605, MacroName: "Trans Fat", Unit: "g", DailyValue: nil},
-	{ID: 646, MacroName: "Polyunsaturated Fat", Unit: "g", DailyValue: nil},
-	{ID: 645, MacroName: "Monounsaturated Fat", Unit: "g", DailyValue: nil},
-	{ID: 203, MacroName: "Protein", Unit: "g", DailyValue: nil},
-	{ID: 269, MacroName: "Sugar", Unit: "g", DailyValue: intPtr(50)},
-	{ID: 307, MacroName: "Sodium", Unit: "mg", DailyValue: intPtr(2300)},
-	{ID: 291, MacroName: "Dietary Fiber", Unit: "g", DailyValue: intPtr(28)},
-	{ID: 601, MacroName: "Cholesterol", Unit: "mg", DailyValue: intPtr(300)},
-	{ID: 306, MacroName: "Potassium", Unit: "mg", DailyValue: nil},
-	{ID: 303, MacroName: "Iron", Unit: "mg", DailyValue: nil},
-	{ID: 262, MacroName: "Caffine", Unit: "mg", DailyValue: nil},
+	{ID: CaloriesId, MacroName: CaloriesString, Unit: "kcal", DailyValue: intPtr(2000)},
+	{ID: TotalCarbohydrateId, MacroName: TotalCarbohydrateString, Unit: "g", DailyValue: nil},
+	{ID: TotalFatId, MacroName: TotalFatString, Unit: "g", DailyValue: intPtr(78)},
+	{ID: SaturatedFatId, MacroName: SaturatedFatString, Unit: "g", DailyValue: nil},
+	{ID: TransFatId, MacroName: TransFatString, Unit: "g", DailyValue: nil},
+	{ID: PolyunsaturatedFatId, MacroName: PolyunsaturatedFatString, Unit: "g", DailyValue: nil},
+	{ID: MonounsaturatedFatId, MacroName: MonounsaturatedFatString, Unit: "g", DailyValue: nil},
+	{ID: ProteinId, MacroName: ProteinString, Unit: "g", DailyValue: nil},
+	{ID: SugarId, MacroName: SugarString, Unit: "g", DailyValue: intPtr(50)},
+	{ID: SodiumId, MacroName: SodiumString, Unit: "mg", DailyValue: intPtr(2300)},
+	{ID: DietaryFiberId, MacroName: DietaryFiberString, Unit: "g", DailyValue: intPtr(28)},
+	{ID: CholesterolId, MacroName: CholesterolString, Unit: "mg", DailyValue: intPtr(300)},
+	{ID: PotassiumId, MacroName: PotassiumString, Unit: "mg", DailyValue: nil},
+	{ID: IronId, MacroName: IronString, Unit: "mg", DailyValue: nil},
+	{ID: CaffeineId, MacroName: CaffeineString, Unit: "mg", DailyValue: nil},
+	{ID: PhosphorusId, MacroName: PhosphorusString, Unit: "mg", DailyValue: nil},
 }
 
 func intPtr(i int) *int {

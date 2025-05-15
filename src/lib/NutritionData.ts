@@ -74,10 +74,12 @@ interface NutritionErrorObject {
     errorString: string;
 }
 
-class NutritionResponseObject {
-    foods: FoodItem[] = [];
-    errors: NutritionErrorObject[] = [];
+interface NaturalLanguageResponseObject {
+    foods: FoodItem[];
+    totalNutritionInformation: FoodItem;
+    errors: NutritionErrorObject[];
 
+    /*
     public getTotalNutritionData(decimal: number) : NutritionMacros {
         let ret = new NutritionMacros();
         this.foods.forEach(food => {
@@ -110,26 +112,12 @@ class NutritionResponseObject {
 
         return ret;
     }      
+    */
 
 }
 
-class NutritionMacros {
-    calories: number = 0;
-    total_fat: number = 0;
-    saturated_fat: number = 0;
-    cholesterol: number = 0;
-    sodium: number = 0;
-    total_carbohydrate: number = 0;
-    dietary_fiber: number = 0;
-    sugars: number = 0;
-    protein: number = 0;
-    potassium: number = 0;
-    phosphorus: number = 0;
-    full_nutrients: Nutrient[] = [];
-}
-
-class RecipeResponseObject {
-    recipeList: Recipe[] = []
+interface RecipeResponseObject {
+    recipeList: Recipe[];
 }
 
 interface Recipe {
@@ -137,7 +125,45 @@ interface Recipe {
     recipe_name: string;
     food_string: string;
     serving_size: number;
-    nutrition_id: NutritionMacros;
+    // nutrition_id: NutritionMacros;
+}
+
+export enum MacroNutrientStrings {
+    Calorie = "Calories",
+    TotalCarbohydrate = "Total Carbohydrate",
+    TotalFat = "Total Fat",
+    SaturatedFat = "Saturated Fat",
+    TransFat = "Trans Fat",
+    PolyunsaturatedFat = "Polyunsaturated Fat",
+    MonounsaturatedFat = "Monounsaturated Fat",
+    Protein = "Protein",
+    Sugar = "Sugar",
+    Sodium = "Sodium",
+    DietaryFiber = "Dietary Fiber",
+    Cholesterol = "Cholesterol",
+    Potassium = "Potassium",
+    Iron = "Iron",
+    Caffeine = "Caffeine",
+    Phosphorus = "Phosphorus",
+}
+
+export enum MacroNutrientIds {
+    Calorie = 208,
+    TotalCarbohydrate = 205,
+    TotalFat = 204,
+    SaturatedFat = 606,
+    TransFat = 605,
+    PolyunsaturatedFat = 646,
+    MonounsaturatedFat = 645,
+    Protein = 203,
+    Sugar = 269,
+    Sodium = 307,
+    DietaryFiber = 291,
+    Cholesterol = 601,
+    Potassium = 306,
+    Iron = 303,
+    Caffeine = 262,
+    Phosphorus = 305,
 }
 
 interface NutritionixNutrient {
@@ -150,22 +176,24 @@ interface NutritionixNutrient {
 // id values from https://docx.syndigo.com/developers/docs/list-of-all-nutrients-and-nutrient-ids-from-api
 // daily values taken from https://www.fda.gov/food/nutrition-facts-label/how-understand-and-use-nutrition-facts-label
 // when making updates, be sure to update nutrition.go/NutritionLabelContent
-const NutritionLabelContent: NutritionixNutrient[] = [
-    { id: 204, macro_name: "Total Fat", unit: "g", daily_value: 78 },
-    { id: 606, macro_name: "Saturated Fat", unit: "g", daily_value: null },
-    { id: 605, macro_name: "Trans Fat", unit: "g", daily_value: null },
-    { id: 646, macro_name: "Polyunsaturated Fat", unit: "g", daily_value: null },
-    { id: 645, macro_name: "Monounsaturated Fat", unit: "g", daily_value: null },
-    { id: 203, macro_name: "Protein", unit: "g", daily_value: null },
-    { id: 269, macro_name: "Sugar", unit: "g", daily_value: 50 },
-    { id: 307, macro_name: "Sodium", unit: "mg", daily_value: 2300 },
-    { id: 291, macro_name: "Dietary Fiber", unit: "g", daily_value: 28 },
-    { id: 601, macro_name: "Cholesterol", unit: "mg", daily_value: 300 },
-    { id: 306, macro_name: "Potassium", unit: "mg", daily_value: null },
-    { id: 303, macro_name: "Iron", unit: "mg", daily_value: null },
-    { id: 262, macro_name: "Caffine", unit: "mg", daily_value: null },
+export const NutritionLabelContent: NutritionixNutrient[] = [
+    { id: MacroNutrientIds.Calorie, macro_name: MacroNutrientStrings.Calorie, unit: "kcal", daily_value: 2000 },
+    { id: MacroNutrientIds.TotalCarbohydrate, macro_name: MacroNutrientStrings.TotalCarbohydrate, unit: "g", daily_value: null },
+    { id: MacroNutrientIds.TotalFat, macro_name: MacroNutrientStrings.TotalFat, unit: "g", daily_value: 78 },
+    { id: MacroNutrientIds.SaturatedFat, macro_name: MacroNutrientStrings.SaturatedFat, unit: "g", daily_value: null },
+    { id: MacroNutrientIds.TransFat, macro_name: MacroNutrientStrings.TransFat, unit: "g", daily_value: null },
+    { id: MacroNutrientIds.PolyunsaturatedFat, macro_name: MacroNutrientStrings.PolyunsaturatedFat, unit: "g", daily_value: null },
+    { id: MacroNutrientIds.MonounsaturatedFat, macro_name: MacroNutrientStrings.MonounsaturatedFat, unit: "g", daily_value: null },
+    { id: MacroNutrientIds.Protein, macro_name: MacroNutrientStrings.Protein, unit: "g", daily_value: null },
+    { id: MacroNutrientIds.Sugar, macro_name: MacroNutrientStrings.Sugar, unit: "g", daily_value: 50 },
+    { id: MacroNutrientIds.Sodium, macro_name: MacroNutrientStrings.Sodium, unit: "mg", daily_value: 2300 },
+    { id: MacroNutrientIds.DietaryFiber, macro_name: MacroNutrientStrings.DietaryFiber, unit: "g", daily_value: 28 },
+    { id: MacroNutrientIds.Cholesterol, macro_name: MacroNutrientStrings.Cholesterol, unit: "mg", daily_value: 300 },
+    { id: MacroNutrientIds.Potassium, macro_name: MacroNutrientStrings.Potassium, unit: "mg", daily_value: null },
+    { id: MacroNutrientIds.Iron, macro_name: MacroNutrientStrings.Iron, unit: "mg", daily_value: null },
+    { id: MacroNutrientIds.Caffeine, macro_name: MacroNutrientStrings.Caffeine, unit: "mg", daily_value: null },
+    { id: MacroNutrientIds.Phosphorus, macro_name: MacroNutrientStrings.Phosphorus, unit: "mg", daily_value: null },
 ];
 
-export { NutritionResponseObject, NutritionMacros, RecipeResponseObject, NutritionLabelContent }
-export type { FoodItem, Recipe, NutritionixNutrient, NutritionErrorObject }
+export type { FoodItem, Recipe, NutritionixNutrient, NaturalLanguageResponseObject, NutritionErrorObject, RecipeResponseObject }
 

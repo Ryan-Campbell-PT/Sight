@@ -206,6 +206,7 @@ func helper_getNutrient(nutritionInfo FoodItem, nutritionId int64) float64 {
 func helper_saveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
 	db := getDatabase()
 
+	// SELECT at the bottom grabs the id of the row that was just created
 	row := db.QueryRow(`
 		INSERT INTO nutrition_info (
 			calories, protein, carbs, fiber, cholesterol, sugar,
@@ -216,19 +217,19 @@ func helper_saveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
 		);
 		SELECT ID = CONVERT(BIGINT, SCOPE_IDENTITY());
 	`,
-		sql.Named("Calories", nutritionInfo.Calories),
-		sql.Named("Protein", nutritionInfo.Protein),
-		sql.Named("Carbs", nutritionInfo.TotalCarbohydrate),
-		sql.Named("Fiber", nutritionInfo.DietaryFiber),
-		sql.Named("Cholesterol", nutritionInfo.Cholesterol),
-		sql.Named("Sugar", nutritionInfo.Sugars),
-		sql.Named("Phosphorus", nutritionInfo.Phosphorus),
-		sql.Named("Sodium", nutritionInfo.Sodium),
-		sql.Named("TotalFat", nutritionInfo.TotalFat),
-		sql.Named("SaturatedFat", nutritionInfo.SaturatedFat),
-		sql.Named("PolyFat", helper_getNutrient(nutritionInfo, NutrientPolyunsaturatedFat)),
-		sql.Named("MonoFat", helper_getNutrient(nutritionInfo, NutrientMonounsaturatedFat)),
-		sql.Named("Potassium", helper_getNutrient(nutritionInfo, NutrientPotassium)),
+		sql.Named("Calories", helper_getNutrient(nutritionInfo, CaloriesId)),
+		sql.Named("Protein", helper_getNutrient(nutritionInfo, ProteinId)),
+		sql.Named("Carbs", helper_getNutrient(nutritionInfo, TotalCarbohydrateId)),
+		sql.Named("Fiber", helper_getNutrient(nutritionInfo, DietaryFiberId)),
+		sql.Named("Cholesterol", helper_getNutrient(nutritionInfo, CholesterolId)),
+		sql.Named("Sugar", helper_getNutrient(nutritionInfo, SugarId)),
+		sql.Named("Phosphorus", helper_getNutrient(nutritionInfo, PhosphorusId)),
+		sql.Named("Sodium", helper_getNutrient(nutritionInfo, SodiumId)),
+		sql.Named("TotalFat", helper_getNutrient(nutritionInfo, TotalFatId)),
+		sql.Named("SaturatedFat", helper_getNutrient(nutritionInfo, SaturatedFatId)),
+		sql.Named("PolyFat", helper_getNutrient(nutritionInfo, PolyunsaturatedFatId)),
+		sql.Named("MonoFat", helper_getNutrient(nutritionInfo, MonounsaturatedFatId)),
+		sql.Named("Potassium", helper_getNutrient(nutritionInfo, PotassiumId)),
 	)
 	var nutritionKey int64
 	err := row.Scan(&nutritionKey)

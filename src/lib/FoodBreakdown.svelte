@@ -1,18 +1,77 @@
 <script lang="ts">
-    import { type FoodItem } from "./NutritionData";
-    import { roundToDecimal } from "./util";
+    import {
+        type FoodItem,
+        MacroNutrientIds,
+        MacroNutrientStrings,
+    } from "./NutritionData";
+    import { roundToDecimal, getNutritionValueFromName } from "./util";
 
-    export let item: FoodItem;
+    let { item }: { item: FoodItem } = $props();
 </script>
+
 <tr class="food-breakdown {item.food_name}">
-    <th scope="row"><img style="width: 50px; height: 50px;" alt={item.food_name} src={item.photo.thumb}/></th>
+    <th scope="row"
+        ><img
+            style="width: 50px; height: 50px;"
+            alt={item.food_name}
+            src={item.photo.thumb}
+        /></th
+    >
     <td>{item.food_name}</td>
-    <td>{roundToDecimal(item.nf_calories, 0)}</td>
-    <td>{roundToDecimal(item.nf_total_carbohydrate ?? "0", 0)}g</td>
-    <td>{roundToDecimal(item.nf_protein ?? "0", 0)}g</td>
-    <td>{roundToDecimal(item.nf_sodium ?? "0", 0)}mg</td>
-    <td>{roundToDecimal(item.nf_sugars ?? "0", 0)}g</td>
-    <td>{roundToDecimal(item.nf_total_fat ?? "0", 0)}g</td>
+    <td
+        >{roundToDecimal(
+            getNutritionValueFromName(
+                MacroNutrientIds.Calorie,
+                item.full_nutrient_map,
+            ),
+            0,
+        )}
+    </td>
+    <td
+        >{roundToDecimal(
+            getNutritionValueFromName(
+                MacroNutrientIds.TotalCarbohydrate,
+                item.full_nutrient_map,
+            ),
+            0,
+        )}</td
+    >
+    <td
+        >{roundToDecimal(
+            getNutritionValueFromName(
+                MacroNutrientIds.Protein,
+                item.full_nutrient_map,
+            ),
+            0,
+        )}</td
+    >
+    <td
+        >{roundToDecimal(
+            getNutritionValueFromName(
+                MacroNutrientIds.Sodium,
+                item.full_nutrient_map,
+            ),
+            0,
+        )}</td
+    >
+    <td
+        >{roundToDecimal(
+            getNutritionValueFromName(
+                MacroNutrientIds.Sugar,
+                item.full_nutrient_map,
+            ),
+            0,
+        )}</td
+    >
+    <td
+        >{roundToDecimal(
+            getNutritionValueFromName(
+                MacroNutrientIds.TotalFat,
+                item.full_nutrient_map,
+            ),
+            0,
+        )}</td
+    >
 </tr>
 <!-- Just keeping this here in case a simple text display is needed
 <div class="nutritionBreakdown">

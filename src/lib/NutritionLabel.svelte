@@ -5,40 +5,44 @@
         NutritionLabelContent,
         MacroNutrientIds,
         MacroNutrientStrings,
+        getNutrientValueFromId,
     } from "./NutritionData";
+    import { roundToDecimal } from "../lib/util";
     import { bootstrap } from "./bootstrapClasses";
-    import { getNutritionValueFromName } from "./util";
 
     let {
         totalNutritionInfo,
         isVisible,
     }: { totalNutritionInfo: FoodItem; isVisible: boolean } = $props();
 
-    const calculatePercentage = (currentValue: number, dailyValue: number) => {
+    const calculateDailyValuePercentage = (
+        currentValue: number,
+        dailyValue: number,
+    ) => {
         return Math.round((currentValue / dailyValue) * 100);
     };
 
-    const createNutritionRow = (
-        name: string,
-        isExtendedMacro: boolean,
-    ): string => {
+    const createNutritionRow = (name: string, isIndented: boolean): string => {
         if (!totalNutritionInfo || !totalNutritionInfo.full_nutrients)
             return "";
-        const macroValue = NutritionLabelContent.find(
+        const macroInfo = NutritionLabelContent.find(
             (m) => m.macro_name == name,
         );
-        if (macroValue == null) return "";
-        const totalNutritionMacro = totalNutritionInfo.full_nutrients.find(
-            (m) => m.attr_id === macroValue.id,
+        if (!macroInfo) return "";
+        const macroValue = roundToDecimal(
+            getNutrientValueFromId(
+                macroInfo.id,
+                totalNutritionInfo.full_nutrient_map,
+            ),
+            0,
         );
-        if (totalNutritionMacro == null) return "";
         return `
-                <div class="${isExtendedMacro ? bootstrap.nutritionLabel.extendedMacroRow : bootstrap.nutritionLabel.macroRow}">
+                <div class="${isIndented ? bootstrap.nutritionLabel.extendedMacroRow : bootstrap.nutritionLabel.macroRow}">
                     <div class="${bootstrap.nutritionLabel.macroNameValue}">
-                        ${isExtendedMacro ? `<span>${name}</span>` : `<b>${name}</b>`}
-                        <span>${totalNutritionMacro.value ?? 0}${macroValue.unit}</span>
+                        ${isIndented ? `<span>${name}</span>` : `<b>${name}</b>`}
+                        <span>${macroValue ?? 0}${macroInfo.unit}</span>
                     </div>
-                    ${macroValue.daily_value ? `<b class="${bootstrap.nutritionLabel.percentage}">${calculatePercentage(totalNutritionMacro.value, macroValue.daily_value)}%</b>` : ``}
+                    ${macroInfo.daily_value ? `<b class="${bootstrap.nutritionLabel.percentage}">${calculateDailyValuePercentage(macroValue, macroInfo.daily_value)}%</b>` : ``}
                 </div>
             `;
     };
@@ -53,18 +57,20 @@
             <div class="fs-4 d-flex justify-content-between">
                 <span>Calories</span>
                 <!-- TODO im not totally sure i like this, may need to be reworked with the similar functionality to whats used in createNutritionRow -->
-                <span
-                    >{getNutritionValueFromName(
-                        MacroNutrientIds.Calorie,
-                        totalNutritionInfo.full_nutrient_map,
-                    )}</span
-                >
+                <span>
+                    {roundToDecimal(
+                        getNutrientValueFromId(
+                            MacroNutrientIds.Calorie,
+                            totalNutritionInfo.full_nutrient_map,
+                        ),
+                        0,
+                    )}
+                </span>
             </div>
         </div>
         <hr class="mx-1" />
         <div class="m-3">
             <span class="">% Daily Value*</span>
-            <!-- TODO make these variables, not hard strings -->
             {#each [MacroNutrientStrings.TotalFat] as m}
                 {@html createNutritionRow(m, false)}
             {/each}

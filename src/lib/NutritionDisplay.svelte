@@ -27,32 +27,32 @@
     ];
 </script>
 
-{#if nutritionLabelIsVisible || nutritionBreakdownIsVisible}
-    <div>
+<div>
+    {#if nutritionLabelIsVisible}
         <div class="nutritionLabel">
             <NutritionLabel
                 totalNutritionInfo={nutritionResponse.totalNutritionInformation}
                 isVisible={nutritionLabelIsVisible}
             />
         </div>
-        {#if nutritionBreakdownIsVisible}
-            <table class="total-food-nutrition-breakdown table">
-                <thead>
-                    <tr>
-                        {#each columns as col}
-                            <th scope="col">{col}</th>
-                        {/each}
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each nutritionResponse.foods as food}
-                        <FoodBreakdown item={food} />
+    {/if}
+    {#if nutritionBreakdownIsVisible}
+        <table class="total-food-nutrition-breakdown table">
+            <thead>
+                <tr>
+                    {#each columns as col}
+                        <th scope="col">{col}</th>
                     {/each}
-                    {#each nutritionResponse.errors as error}
-                        <ErrorBreakdown {error} colSpan={columns.length} />
-                    {/each}
-                </tbody>
-            </table>
-        {/if}
-    </div>
-{/if}
+                </tr>
+            </thead>
+            <tbody>
+                {#each nutritionResponse.foods as food}
+                    <FoodBreakdown item={food} />
+                {/each}
+                {#each nutritionResponse.errors as error}
+                    <ErrorBreakdown {error} colSpan={columns.length} />
+                {/each}
+            </tbody>
+        </table>
+    {/if}
+</div>

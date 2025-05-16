@@ -11,11 +11,3 @@ export function formatDateToYYYYMMDD(date: Date): string {
 	const day = date.getDate().toString().padStart(2, "0");
 	return `${year}-${month}-${day}`;
 }
-
-export function getNutritionValueFromName(macroId: number, nutritionMap: Map<number, number>): number {
-	// const macroValue = NutritionLabelContent.find(m => m.macro_name === macro);
-	// return macroValue ? nutritionMap.get(macroValue.id) ?? -1 : -1;
-
-	// return nutritionMap.get(macroId) ?? -1;
-	return -1
-}

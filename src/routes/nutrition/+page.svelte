@@ -11,24 +11,20 @@
     import { onMount } from "svelte";
     import CustomRecipe from "$lib/CustomRecipe.svelte";
     import { error } from "@sveltejs/kit";
-    import FoodListTextBox from "$lib/FoodListTextBox.svelte";
+    import FoodListTextBox from "$lib/NaturalLanguageTextBox.svelte";
 
-    let foodListString_calculate = $state("");
-    let foodListString_recipe = $state("");
-    let numServings_recipe = $state(1);
-    let nutritionInfoIsVisible = $state(true);
+    let nutritionDisplayIsVisible = $state(false);
     // let nutritionResponse = $state({
     //     nutritionResponseObject: NutritionResponseObject,
     //     // with the display variable being created, you may be able to get rid of one of the isVisible variables
     //     display: false,
     // });
     let userRecipeList = $state([]);
-    let showNutritionBreakdown = $state(true);
+    let showNutritionBreakdown = $state(false);
 
     let setNutritionDisplayVisible = (isVisible: boolean) => {
-        nutritionInfoIsVisible = isVisible;
-        // nutritionResponse.display = isVisible;
-        // nutritionInfoIsVisible = isVisible;
+        nutritionDisplayIsVisible = isVisible;
+        showNutritionBreakdown = isVisible;
     };
 
     let testNutritionInformationFromChildComponent =
@@ -67,6 +63,8 @@
                 bind:nutritionResponse={
                     testNutritionInformationFromChildComponent
                 }
+                fetchFailCallback={() => setNutritionDisplayVisible(false)}
+                fetchSuccessCallback={() => setNutritionDisplayVisible(true)}
             />
             <input
                 type="button"
@@ -90,13 +88,11 @@
             {/if}
         </div>
         <div id="second-column-half" class="col-md-6 container">
-            {#if nutritionInfoIsVisible && testNutritionInformationFromChildComponent}
-                <NutritionDisplay
-                    nutritionResponse={testNutritionInformationFromChildComponent}
-                    nutritionLabelIsVisible={nutritionInfoIsVisible}
-                    nutritionBreakdownIsVisible={showNutritionBreakdown}
-                />
-            {/if}
+            <NutritionDisplay
+                nutritionResponse={testNutritionInformationFromChildComponent}
+                nutritionLabelIsVisible={nutritionDisplayIsVisible}
+                nutritionBreakdownIsVisible={showNutritionBreakdown}
+            />
 
             <!--
             {#if nutritionResponse.display}

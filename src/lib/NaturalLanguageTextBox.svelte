@@ -3,7 +3,8 @@ idea is to have it in the recipe and nutrition page -->
 <script lang="ts">
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
     import type { NaturalLanguageResponseObject } from "./NutritionData";
-    import { formatDateToYYYYMMDD } from "../lib/util";
+    import { naturalLanguageResponseObject_MapCorrection } from "./NutritionData";
+    import { formatDateToYYYYMMDD } from "./util";
 
     // state
     let foodListString = $state("");
@@ -17,12 +18,16 @@ idea is to have it in the recipe and nutrition page -->
         secondaryButtonText = "",
         secondaryButtonFunction = () => {},
         nutritionResponse = $bindable(), // the api response returned back to the parent component, if needed
+        fetchSuccessCallback = () => {},
+        fetchFailCallback = () => {},
     }: {
         displayCalendar: boolean;
         primaryButtonText: string;
         secondaryButtonText?: string;
         secondaryButtonFunction?: () => void;
         nutritionResponse: NaturalLanguageResponseObject;
+        fetchSuccessCallback: () => void;
+        fetchFailCallback: () => void;
     } = $props();
 
     let post_foodList = async (saveToDb = false) => {
@@ -39,15 +44,17 @@ idea is to have it in the recipe and nutrition page -->
             })
                 .then((res) => res.json())
                 .then((data) => {
-                    const f = JSON.parse(data);
-                    Object.assign(nutritionResponse, f);
-                    // forces Svelte to rerender
-                    // nutritionResponse = { ...nutritionResponse };
-                    // setNutritionDisplayVisible(true);
+                    // this is necessary because JSON.parse() does not convert Maps,
+                    // they have to be converted to an actual JS map
+                    const response =
+                        naturalLanguageResponseObject_MapCorrection(
+                            JSON.parse(data) as NaturalLanguageResponseObject,
+                        );
+                    Object.assign(nutritionResponse, response);
                 })
+                .then(() => fetchSuccessCallback())
                 .catch((err) => {
-                    // setNutritionDisplayVisible(false);
-                    console.log(err);
+                    fetchFailCallback();
                     throw new Error(err);
                 });
         } catch (err) {

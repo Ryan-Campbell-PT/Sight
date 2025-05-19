@@ -19,6 +19,7 @@ type Recipe struct {
 	Name            string `json:"recipe_name"`
 	FoodListString  string `json:"food_string"`
 	ServingSize     int64  `json:"serving_size"`
+	Active          bool   `json:"active"`
 	NutritionInfoId int64  `json:"nutrition_id"`
 }
 
@@ -178,19 +179,45 @@ func saveToDatabase_RecipeResponse(data RecipeResponse, nutritionInfo FoodItem) 
 	return nil
 }
 
-func getFromDatabase_Recipes() ([]Recipe, error) {
-	db := helper_getMsSqlDatabase()
-	var recipeList []Recipe
+func getFromDatabase_AllRecipes() ([]Recipe, error) {
+	functionName := "getFromDatabase_AllRecipes/"
 
-	response, err := db.Query("SELECT * FROM recipe")
+	inactiveResponse, err := getFromDatabase_Recipes(false)
+	if handleError(functionName+"Error getting inactive recipes: ", err) {
+		return nil, err
+	}
+	activeResponse, err := getFromDatabase_Recipes(true)
+	if handleError(functionName+"Error getting active recipes: ", err) {
+		return nil, err
+	}
+
+	return append(activeResponse, inactiveResponse...), nil
+}
+
+func getFromDatabase_Recipes(active bool) ([]Recipe, error) {
+	functionName := "getFromDatabase_Recipes/"
+	db := getDatabase()
+
+	response, err := db.Query("SELECT * FROM recipe WHERE active = @Active", sql.Named("Active", active))
+
 	if handleError("Database.go/Error grabbing recipes: ", err) {
 		return nil, err
 	}
 	defer response.Close()
 
-	for response.Next() {
+	recipeList, err := createRecipeList_FromDbQuery(response)
+	if handleError(functionName+"Error getting recipe list from db query: ", err) {
+		return nil, err
+	}
+
+	return recipeList, nil
+}
+
+func createRecipeList_FromDbQuery(dbQuery *sql.Rows) ([]Recipe, error) {
+	var recipeList []Recipe
+	for dbQuery.Next() {
 		var recipe Recipe
-		if err := response.Scan(&recipe.Id, &recipe.Name, &recipe.FoodListString, &recipe.ServingSize, &recipe.NutritionInfoId); err != nil {
+		if err := dbQuery.Scan(&recipe.Id, &recipe.Name, &recipe.FoodListString, &recipe.ServingSize, &recipe.NutritionInfoId); err != nil {
 			return nil, err
 		}
 		recipeList = append(recipeList, recipe)

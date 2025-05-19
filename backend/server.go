@@ -26,12 +26,13 @@ type RecipeResponse struct {
 
 // aligns with RecipeRequestObject
 type PostRecipe_RequestBody struct {
-	RecipeName     string `json:"recipeName"`
-	FoodListString string `json:"foodListString"`
-	NumServings    int64  `json:"numServings"`
+	RecipeName             string   `json:"recipeName"`
+	AlternativeRecipeNames []string `json:"alternativeRecipeNames"`
+	FoodListString         string   `json:"foodListString"`
+	NumServings            int64    `json:"numServings"`
 }
 
-type GetRecipeResponse struct {
+type GetRecipe_RequestBody struct {
 	RecipeList []Recipe
 }
 
@@ -226,7 +227,7 @@ func post_saveRecipe(c *gin.Context) {
 }
 
 func get_recipes(c *gin.Context) {
-	recipes, err := getFromDatabase_Recipes()
+	recipes, err := getFromDatabase_Recipes(true)
 	if handleError("Server.go/Error getting recipes from database: ", err) {
 		c.JSON(http.StatusBadRequest, "")
 	}
@@ -251,8 +252,10 @@ func runServer() {
 	}))
 
 	router.POST("/postFoodList", post_foodList)
-	router.POST("/postRecipe", post_saveRecipe)
-	router.GET("/getRecipes", get_recipes)
+	router.POST("/postSaveRecipe", post_saveRecipe)
+	// router.GET("/getActiveRecipes", get_activeRecipes)
+	// router.GET("/getInactiveRecipes", get_inactiveRecipes)
+	// router.GET("/getAllRecipes", get_allRecipes)
 
 	router.Run(":8080")
 }

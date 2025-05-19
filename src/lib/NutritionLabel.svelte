@@ -91,5 +91,11 @@
                 {@html createNutritionRow(m, false)}
             {/each}
         </div>
+        <!-- <div>
+            secondary component
+        </div>
+        <div>
+            literally everything
+        </div> -->
     </div>
 {/if}

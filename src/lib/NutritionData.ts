@@ -125,7 +125,8 @@ interface Recipe {
     recipe_name: string;
     food_string: string;
     serving_size: number;
-    // nutrition_id: NutritionMacros;
+    nutrition_id: number;
+    active: boolean;
 }
 
 export enum MacroNutrientStrings {

@@ -66,26 +66,6 @@
                 fetchFailCallback={() => setNutritionDisplayVisible(false)}
                 fetchSuccessCallback={() => setNutritionDisplayVisible(true)}
             />
-            <input
-                type="button"
-                onclick={() => {
-                    console.log(
-                        $state.snapshot(
-                            testNutritionInformationFromChildComponent,
-                        ),
-                    );
-                }}
-            />
-            {#if userRecipeList.length > 0}
-                <div id="recipe-list">
-                    <h3>Recipe List</h3>
-                    <ul id="recipes">
-                        {#each userRecipeList as recipe}
-                            <CustomRecipe {recipe} />
-                        {/each}
-                    </ul>
-                </div>
-            {/if}
         </div>
         <div id="second-column-half" class="col-md-6 container">
             <NutritionDisplay

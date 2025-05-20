@@ -1,9 +1,10 @@
-package main
+package util
 
 import (
 	"fmt"
 	"log"
 	"math"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
@@ -25,7 +26,7 @@ type Config struct {
 	Azure_Port     int64  `env:"Azure_Port"`
 }
 
-func getConfig() Config {
+func GetEnvConfig() Config {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatalf("unable to load .env file")
@@ -39,7 +40,7 @@ func getConfig() Config {
 	return cfg
 }
 
-func handleError(printStr string, err error) bool {
+func HandleError(printStr string, err error) bool {
 	if err != nil {
 		fmt.Println(printStr, err)
 		return true
@@ -48,7 +49,11 @@ func handleError(printStr string, err error) bool {
 	return false
 }
 
-func roundToNearestDecimal(num float64, decimal float64) float64 {
+func RoundToNearestDecimal(num float64, decimal float64) float64 {
 	factor := math.Pow(10, decimal)
 	return math.Round(num*factor) / factor
+}
+
+func GetDate(date time.Time) string {
+	return date.Format(time.DateOnly)
 }

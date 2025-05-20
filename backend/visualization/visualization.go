@@ -1,4 +1,28 @@
-package main
+package visualization
+
+/*
+func visualizationTest_queryForDailyCalories() ([]Daily, error) {
+	duh()
+	var daily []Daily;
+	rows, err := db.Query("select * from daily")
+	if err != nil {
+		return nil, fmt.Errorf("dailyQuery %q: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var day Daily
+		if err := rows.Scan(&day.ID, &day.foodString, &day.date, &day.calories); err != nil {
+			return nil, fmt.Errorf("dailyQuery %q: %v", err)
+		}
+		daily = append(daily, day)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("dailyQuery %q: %v", err)
+	}
+	return daily, nil
+}
+*/
 
 /*
 

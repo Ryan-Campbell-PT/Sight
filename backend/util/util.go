@@ -2,8 +2,10 @@ package util
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"math"
+	"net/http"
 	"time"
 
 	"github.com/caarlos0/env/v6"
@@ -56,4 +58,21 @@ func RoundToNearestDecimal(num float64, decimal float64) float64 {
 
 func GetDate(date time.Time) string {
 	return date.Format(time.DateOnly)
+}
+
+func ReadRequestBody(body io.ReadCloser) ([]byte, error) {
+	defer body.Close()
+	data, err := io.ReadAll(body)
+	return data, err
+}
+
+func SendHttpRequest(req *http.Request) ([]byte, error) {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if HandleError("SendHttpRequest/Error sending http request: ", err) {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
 }

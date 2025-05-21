@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Ryan-Campbell-PT/Sight/backend/nutrition"
 	"github.com/Ryan-Campbell-PT/Sight/backend/util"
 
 	_ "github.com/microsoft/go-mssqldb"
@@ -76,28 +75,6 @@ func GetDailyRecord(startDate time.Time, endDate time.Time) ([]Daily, error) {
 	}
 
 	return records, nil
-}
-
-func SaveDailyRecord(daily Daily, nutritionInfo nutrition.FoodItem) error {
-	functionName := "SaveDailyRecord/"
-	db := GetDatabase()
-
-	nutritionId, err := SaveNutritionInfo(nutritionInfo)
-	if util.HandleError(functionName+"Error saving nutrition info to DB: ", err) {
-		return err
-	}
-
-	_, err = db.Exec(`INSERT INTO daily(food_string, date, nutrition_id) VALUES(@FoodListString, @Date, @NutritionKey)`,
-		sql.Named("FoodListString", daily.FoodString),
-		sql.Named("Date", daily.Date),
-		sql.Named("NutritionKey", nutritionId),
-	)
-
-	if util.HandleError(functionName+"Error inserting body values into database: ", err) {
-		return err
-	}
-
-	return nil
 }
 
 // TODO this is dumb cause SaveRecipe takes the nutritionId but SaveDailyRecord takes a foodItem
@@ -199,41 +176,4 @@ func createRecipeList(dbQuery *sql.Rows) ([]Recipe, error) {
 	}
 
 	return recipeList, nil
-}
-
-func SaveNutritionInfo(nutritionInfo nutrition.FoodItem) (int64, error) {
-	db := GetDatabase()
-
-	// SELECT at the bottom grabs the id of the row that was just created
-	row := db.QueryRow(`
-		INSERT INTO nutrition_info (
-			calories, protein, carbs, fiber, cholesterol, sugar,
-			phosphorus, sodium, total_fat, saturated_fat, poly_fat, mono_fat, potassium
-		) VALUES (
-			@Calories, @Protein, @Carbs, @Fiber, @Cholesterol, @Sugar,
-			@Phosphorus, @Sodium, @TotalFat, @SaturatedFat, @PolyFat, @MonoFat, @Potassium
-		);
-		SELECT ID = CONVERT(BIGINT, SCOPE_IDENTITY());
-	`,
-		sql.Named("Calories", nutrition.GetNutrient(nutritionInfo, util.CaloriesId)),
-		sql.Named("Protein", nutrition.GetNutrient(nutritionInfo, util.ProteinId)),
-		sql.Named("Carbs", nutrition.GetNutrient(nutritionInfo, util.TotalCarbohydrateId)),
-		sql.Named("Fiber", nutrition.GetNutrient(nutritionInfo, util.DietaryFiberId)),
-		sql.Named("Cholesterol", nutrition.GetNutrient(nutritionInfo, util.CholesterolId)),
-		sql.Named("Sugar", nutrition.GetNutrient(nutritionInfo, util.SugarId)),
-		sql.Named("Phosphorus", nutrition.GetNutrient(nutritionInfo, util.PhosphorusId)),
-		sql.Named("Sodium", nutrition.GetNutrient(nutritionInfo, util.SodiumId)),
-		sql.Named("TotalFat", nutrition.GetNutrient(nutritionInfo, util.TotalFatId)),
-		sql.Named("SaturatedFat", nutrition.GetNutrient(nutritionInfo, util.SaturatedFatId)),
-		sql.Named("PolyFat", nutrition.GetNutrient(nutritionInfo, util.PolyunsaturatedFatId)),
-		sql.Named("MonoFat", nutrition.GetNutrient(nutritionInfo, util.MonounsaturatedFatId)),
-		sql.Named("Potassium", nutrition.GetNutrient(nutritionInfo, util.PotassiumId)),
-	)
-	var nutritionKey int64
-	err := row.Scan(&nutritionKey)
-	if util.HandleError("Error getting nutritionKey from Recipe Response", err) {
-		return -1, err
-	}
-
-	return nutritionKey, nil
 }

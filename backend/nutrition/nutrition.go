@@ -2,13 +2,52 @@ package nutrition
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"github.com/Ryan-Campbell-PT/Sight/backend/server"
+	"github.com/Ryan-Campbell-PT/Sight/backend/database"
 	"github.com/Ryan-Campbell-PT/Sight/backend/util"
+	"github.com/gin-gonic/gin"
 )
+
+func SaveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
+	db := database.GetDatabase()
+
+	// SELECT at the bottom grabs the id of the row that was just created
+	row := db.QueryRow(`
+		INSERT INTO nutrition_info (
+			calories, protein, carbs, fiber, cholesterol, sugar,
+			phosphorus, sodium, total_fat, saturated_fat, poly_fat, mono_fat, potassium
+		) VALUES (
+			@Calories, @Protein, @Carbs, @Fiber, @Cholesterol, @Sugar,
+			@Phosphorus, @Sodium, @TotalFat, @SaturatedFat, @PolyFat, @MonoFat, @Potassium
+		);
+		SELECT ID = CONVERT(BIGINT, SCOPE_IDENTITY());
+	`,
+		sql.Named("Calories", GetNutrient(nutritionInfo, util.CaloriesId)),
+		sql.Named("Protein", GetNutrient(nutritionInfo, util.ProteinId)),
+		sql.Named("Carbs", GetNutrient(nutritionInfo, util.TotalCarbohydrateId)),
+		sql.Named("Fiber", GetNutrient(nutritionInfo, util.DietaryFiberId)),
+		sql.Named("Cholesterol", GetNutrient(nutritionInfo, util.CholesterolId)),
+		sql.Named("Sugar", GetNutrient(nutritionInfo, util.SugarId)),
+		sql.Named("Phosphorus", GetNutrient(nutritionInfo, util.PhosphorusId)),
+		sql.Named("Sodium", GetNutrient(nutritionInfo, util.SodiumId)),
+		sql.Named("TotalFat", GetNutrient(nutritionInfo, util.TotalFatId)),
+		sql.Named("SaturatedFat", GetNutrient(nutritionInfo, util.SaturatedFatId)),
+		sql.Named("PolyFat", GetNutrient(nutritionInfo, util.PolyunsaturatedFatId)),
+		sql.Named("MonoFat", GetNutrient(nutritionInfo, util.MonounsaturatedFatId)),
+		sql.Named("Potassium", GetNutrient(nutritionInfo, util.PotassiumId)),
+	)
+	var nutritionKey int64
+	err := row.Scan(&nutritionKey)
+	if util.HandleError("Error getting nutritionKey from Recipe Response", err) {
+		return -1, err
+	}
+
+	return nutritionKey, nil
+}
 
 // this function will take the list of foods provided by a user
 // and handle all the work associated with that string:
@@ -22,7 +61,7 @@ func FetchNaturalLanguageResponse(foodListString string) (NutritionixAPINaturalL
 		return nutritionInfo, err
 	}
 
-	responseByteArray, err := server.SendHttpRequest(request)
+	responseByteArray, err := util.SendHttpRequest(request)
 	if util.HandleError(functionName+"Error sending Nutritionix request: ", err) {
 		return nutritionInfo, err
 	}
@@ -77,6 +116,54 @@ func CheckFoodArrayForErrors(foodListString string, foods []FoodItem) []Nutritio
 	}
 
 	return errorList
+}
+
+func getNutritionResponse(c *gin.Context) {
+	functionName := "getNutritionResponse/"
+
+	// read the request body
+	bodyJson, err := util.ReadRequestBody(c.Request.Body)
+	if util.HandleError(functionName+"Error reading query request body: ", err) {
+		return
+	}
+
+	// put the request body into an object
+	var bodyObj GetNutritionRequestBody
+	err = json.Unmarshal(bodyJson, &bodyObj)
+	if util.HandleError(functionName+"Error reading body from query request: ", err) {
+		return
+	}
+
+	// pass in the foodListString, get back the information from the api
+	// TODO this i feel should be handled by the server? cause its a fetch?
+	naturalLanguageResponseObject, err := FetchNaturalLanguageResponse(bodyObj.FoodListString)
+	if util.HandleError(functionName+"Error handling food list from request body: ", err) {
+		return
+	}
+
+	ret := NutritionInfoResponse{
+		Foods:                     naturalLanguageResponseObject.Foods,
+		TotalNutritionInformation: MakeTotalNutritionData(naturalLanguageResponseObject.Foods),
+		Errors:                    CheckFoodArrayForErrors(bodyObj.FoodListString, naturalLanguageResponseObject.Foods),
+	}
+
+	//i dont think this need to exist, it can be reworked
+	/* if bodyObj.SaveToDb {
+		// save this information to the Daily table
+		err = saveToDatabase_NutritionInformation(bodyObj.FoodListString, bodyObj.Date, ret.TotalNutritionInformation)
+		if handleError(functionName+"Error saving nutrition info to database: ", err) {
+			return
+		}
+	}
+	*/
+
+	// create return object
+	responseMarshal, err := json.Marshal(ret)
+	if util.HandleError(functionName+"Error marshalling NutritionResponseObject", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, string(responseMarshal))
 }
 
 func buildNutritionixRequest(foodList string) (*http.Request, error) {

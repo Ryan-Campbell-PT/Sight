@@ -6,12 +6,12 @@
         RecipeResponseObject,
         FoodItem,
     } from "../../lib/NutritionData";
-    import NutritionDisplay from "../../lib/NutritionDisplay.svelte";
-    import NutritionLabel from "../../lib/NutritionLabel.svelte";
+    import NutritionDisplay from "$lib/components/NutritionDisplay.svelte";
+    import NutritionLabel from "$lib/components/NutritionLabel.svelte";
     import { onMount } from "svelte";
-    import CustomRecipe from "$lib/CustomRecipe.svelte";
+    import CustomRecipe from "$lib/components/CustomRecipe.svelte";
     import { error } from "@sveltejs/kit";
-    import FoodListTextBox from "$lib/NaturalLanguageTextBox.svelte";
+    import FoodListTextBox from "$lib/components/NaturalLanguageTextBox.svelte";
 
     let nutritionDisplayIsVisible = $state(false);
     // let nutritionResponse = $state({

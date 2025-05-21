@@ -2,7 +2,7 @@
 let you add recipes,
 make modifications to recipes -->
 <script lang="ts">
-    import CustomRecipe from "$lib/CustomRecipe.svelte";
+    import CustomRecipe from "$lib/components/CustomRecipe.svelte";
     import type {
         NaturalLanguageResponseObject,
         Recipe,

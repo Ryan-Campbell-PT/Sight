@@ -1,14 +1,14 @@
 <!-- the nutrition label is the html that will represent the standard Label you see regularly irl -->
 <script lang="ts">
-    import type { FoodItem } from "./NutritionData";
+    import type { FoodItem } from "$lib/NutritionData";
     import {
         NutritionLabelContent,
         MacroNutrientIds,
         MacroNutrientStrings,
-        getNutrientValueFromId,
-    } from "./NutritionData";
-    import { roundToDecimal } from "../lib/util";
-    import { bootstrap } from "./bootstrapClasses";
+    } from "$lib/NutritionData";
+    import { getNutrientValueFromId } from "$lib/NutritionFunctions";
+    import { roundToDecimal } from "$lib/util";
+    import { bootstrap } from "$lib/bootstrapClasses";
 
     let {
         totalNutritionInfo,

@@ -3,9 +3,9 @@
         type FoodItem,
         MacroNutrientIds,
         MacroNutrientStrings,
-        getNutrientValueFromId,
-    } from "./NutritionData";
-    import { roundToDecimal } from "./util";
+    } from "$lib/NutritionData";
+    import { getNutrientValueFromId } from "$lib/NutritionFunctions";
+    import { roundToDecimal } from "$lib/util";
 
     let { item }: { item: FoodItem } = $props();
 </script>

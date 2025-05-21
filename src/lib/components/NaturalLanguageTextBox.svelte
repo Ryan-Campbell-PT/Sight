@@ -2,9 +2,9 @@
 idea is to have it in the recipe and nutrition page -->
 <script lang="ts">
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
-    import type { NaturalLanguageResponseObject } from "./NutritionData";
-    import { naturalLanguageResponseObject_MapCorrection } from "./NutritionData";
-    import { formatDateToYYYYMMDD } from "./util";
+    import type { NaturalLanguageResponseObject } from "$lib/NutritionData";
+    import { createNutrientMap } from "$lib/NutritionFunctions";
+    import { formatDateToYYYYMMDD } from "$lib/util";
 
     // state
     let foodListString = $state("");
@@ -30,6 +30,18 @@ idea is to have it in the recipe and nutrition page -->
         fetchFailCallback: () => void;
     } = $props();
 
+    // this is necessary because JSON.parse() does not convert Maps,
+    // they have to be converted to an actual JS map
+    let mapCorrection = (
+        response: NaturalLanguageResponseObject,
+    ): NaturalLanguageResponseObject => {
+        response.foods.map((m) => (m.full_nutrient_map = createNutrientMap(m)));
+        response.total_nutrition_information.full_nutrient_map =
+            createNutrientMap(response.total_nutrition_information);
+
+        return response;
+    };
+
     let post_foodList = async (saveToDb = false) => {
         const body = {
             foodListString: foodListString,
@@ -37,28 +49,23 @@ idea is to have it in the recipe and nutrition page -->
             saveToDb: saveToDb,
         };
         try {
-            await fetch("http://localhost:8080/postFoodList", {
+            const res = await fetch("http://localhost:8080/postFoodList", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    // this is necessary because JSON.parse() does not convert Maps,
-                    // they have to be converted to an actual JS map
-                    const response =
-                        naturalLanguageResponseObject_MapCorrection(
-                            JSON.parse(data) as NaturalLanguageResponseObject,
-                        );
-                    Object.assign(nutritionResponse, response);
-                })
-                .then(() => fetchSuccessCallback())
-                .catch((err) => {
-                    fetchFailCallback();
-                    throw new Error(err);
-                });
+            });
+            if (!res.ok) {
+                fetchFailCallback();
+                throw new Error();
+            }
+            const json = JSON.parse(
+                await res.json(),
+            ) as NaturalLanguageResponseObject;
+            const responseObj = mapCorrection(json);
+            Object.assign(nutritionResponse, responseObj);
+            fetchSuccessCallback();
         } catch (err) {
-            console.log(err);
+            throw new Error();
         }
     };
 </script>

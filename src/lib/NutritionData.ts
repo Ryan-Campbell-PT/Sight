@@ -74,9 +74,10 @@ interface NutritionErrorObject {
     errorString: string;
 }
 
+// aligns with NutritionInfoResponse in nutrition_objects.go
 interface NaturalLanguageResponseObject {
     foods: FoodItem[];
-    totalNutritionInformation: FoodItem;
+    total_nutrition_information: FoodItem;
     errors: NutritionErrorObject[];
 
     /*
@@ -212,6 +213,7 @@ export function getNutrientValueFromId(id: number, nutritionMap: Map<number, num
 export function foodItem_MapCorrection(food: FoodItem): Map<number, number> {
     let ret = new Map<number, number>();
 
+
     food.full_nutrients.forEach(m => {
         ret.set(m.attr_id, m.value)
     })
@@ -220,13 +222,12 @@ export function foodItem_MapCorrection(food: FoodItem): Map<number, number> {
 }
 
 export function naturalLanguageResponseObject_MapCorrection(response: NaturalLanguageResponseObject): NaturalLanguageResponseObject {
-
     response.foods.map(
-        (m) => (m.full_nutrient_map = foodItem_MapCorrection(m)),
+        m => m.full_nutrient_map = foodItem_MapCorrection(m),
     );
-    response.totalNutritionInformation.full_nutrient_map =
+    response.total_nutrition_information.full_nutrient_map =
         foodItem_MapCorrection(
-            response.totalNutritionInformation,
+            response.total_nutrition_information,
         );
 
     return response

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/Ryan-Campbell-PT/Sight/backend/nutrition"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -19,9 +20,6 @@ func getTotalNutritionInformation_fromFoodListString(foodListString string) (Foo
 
 */
 
-// HTTP POST
-// given the body of a NutritionRequest
-
 func RunServer() {
 	router := gin.Default()
 
@@ -33,7 +31,7 @@ func RunServer() {
 		AllowCredentials: true,
 	}))
 
-	// router.POST("/postFoodList", post_foodList)
+	router.POST("/postFoodList", nutrition.GetNutritionResponse)
 	// router.POST("/postSaveRecipe", post_saveRecipe)
 	// router.GET("/getActiveRecipes", get_activeRecipes)
 	// router.GET("/getInactiveRecipes", get_inactiveRecipes)

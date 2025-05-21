@@ -73,9 +73,10 @@ type GetNutritionRequestBody struct {
 }
 
 // enriched type used to pass to the front end, using the data from Nutritionix
+// aligns with NaturalLanguageResponseObject in NutritionData.ts
 type NutritionInfoResponse struct {
 	Foods                     []FoodItem             `json:"foods"`
-	TotalNutritionInformation FoodItem               `json:"total_nutrition_info"`
+	TotalNutritionInformation FoodItem               `json:"total_nutrition_information"`
 	Errors                    []NutritionErrorObject `json:"errors"`
 }
 

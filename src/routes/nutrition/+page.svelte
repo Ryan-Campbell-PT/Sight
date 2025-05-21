@@ -31,7 +31,7 @@
         $state<NaturalLanguageResponseObject>({
             errors: [],
             foods: [],
-            totalNutritionInformation: {} as FoodItem,
+            total_nutrition_information: {} as FoodItem,
         });
 
     let get_recipes = async () => {

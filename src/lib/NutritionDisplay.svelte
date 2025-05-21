@@ -31,7 +31,7 @@
     {#if nutritionLabelIsVisible}
         <div class="nutritionLabel">
             <NutritionLabel
-                totalNutritionInfo={nutritionResponse.totalNutritionInformation}
+                totalNutritionInfo={nutritionResponse.total_nutrition_information}
                 isVisible={nutritionLabelIsVisible}
             />
         </div>

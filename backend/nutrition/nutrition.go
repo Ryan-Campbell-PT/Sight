@@ -73,9 +73,9 @@ func FetchNaturalLanguageResponse(foodListString string) (NutritionixAPINaturalL
 
 	// since I have to create the whole map again on the front end, this part of code is no longer needed
 	/*
-		for i, food := range nutritionInfo.ListOfFoods {
+		for i, food := range nutritionInfo.Foods {
 			// create the map
-			nMap := nutrition.CreateNutrientMap(food.FullNutrients)
+			nMap := CreateNutrientMap(food.FullNutrients)
 			// assign it
 			food.FullNutrientMap = nMap
 			// replace the old index with the updated index with the map
@@ -118,7 +118,7 @@ func CheckFoodArrayForErrors(foodListString string, foods []FoodItem) []Nutritio
 	return errorList
 }
 
-func getNutritionResponse(c *gin.Context) {
+func GetNutritionResponse(c *gin.Context) {
 	functionName := "getNutritionResponse/"
 
 	// read the request body
@@ -135,7 +135,6 @@ func getNutritionResponse(c *gin.Context) {
 	}
 
 	// pass in the foodListString, get back the information from the api
-	// TODO this i feel should be handled by the server? cause its a fetch?
 	naturalLanguageResponseObject, err := FetchNaturalLanguageResponse(bodyObj.FoodListString)
 	if util.HandleError(functionName+"Error handling food list from request body: ", err) {
 		return

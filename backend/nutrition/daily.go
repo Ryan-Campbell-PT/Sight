@@ -7,7 +7,7 @@ import (
 	"github.com/Ryan-Campbell-PT/Sight/backend/util"
 )
 
-func SaveDailyRecord(daily database.Daily, nutritionInfo FoodItem) error {
+func SaveDailyRecord(daily database.Daily, nutritionInfo CustomFoodItem) error {
 	functionName := "SaveDailyRecord/"
 	db := database.GetDatabase()
 

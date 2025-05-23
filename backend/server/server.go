@@ -31,7 +31,7 @@ func RunServer() {
 		AllowCredentials: true,
 	}))
 
-	router.POST("/postFoodList", nutrition.GetNutritionResponse)
+	router.POST("/postFoodList", nutrition.GetNutritionJson)
 	// router.POST("/postSaveRecipe", post_saveRecipe)
 	// router.GET("/getActiveRecipes", get_activeRecipes)
 	// router.GET("/getInactiveRecipes", get_inactiveRecipes)

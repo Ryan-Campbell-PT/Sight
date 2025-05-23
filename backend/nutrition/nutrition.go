@@ -12,7 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SaveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
+// this function saves nutrition information to the database
+// in most cases, this nutritionInfo variable
+// will be a TotalNutritionInformation variable
+func SaveNutritionInfo(nutritionInfo CustomFoodItem) (int64, error) {
 	db := database.GetDatabase()
 
 	// SELECT at the bottom grabs the id of the row that was just created
@@ -52,23 +55,23 @@ func SaveNutritionInfo(nutritionInfo FoodItem) (int64, error) {
 // this function will take the list of foods provided by a user
 // and handle all the work associated with that string:
 // reaching out to api, marshaling/unmarshaling, building response object
-func FetchNaturalLanguageResponse(foodListString string) (NutritionixAPINaturalLanguageResponse, error) {
+func fetchNaturalLanguageResponse(foodListString string) (*NutritionixAPINaturalLanguageResponse, error) {
 	functionName := "handle_naturalLanguage_foodList/"
-	var nutritionInfo NutritionixAPINaturalLanguageResponse
+	var nutritionInfo *NutritionixAPINaturalLanguageResponse
 
 	request, err := buildNutritionixRequest(foodListString)
 	if util.HandleError(functionName+"Error building Nutritionix request: ", err) {
-		return nutritionInfo, err
+		return nil, err
 	}
 
 	responseByteArray, err := util.SendHttpRequest(request)
 	if util.HandleError(functionName+"Error sending Nutritionix request: ", err) {
-		return nutritionInfo, err
+		return nil, err
 	}
 
-	err = json.Unmarshal(responseByteArray, &nutritionInfo)
+	err = json.Unmarshal(responseByteArray, nutritionInfo)
 	if util.HandleError(functionName+"Error reading nutrition info from nutritionix response and unmarshaling to Food item: ", err) {
-		return nutritionInfo, err
+		return nil, err
 	}
 
 	// since I have to create the whole map again on the front end, this part of code is no longer needed
@@ -86,7 +89,18 @@ func FetchNaturalLanguageResponse(foodListString string) (NutritionixAPINaturalL
 	return nutritionInfo, nil
 }
 
-func CheckFoodArrayForErrors(foodListString string, foods []FoodItem) []NutritionErrorObject {
+// this function name is a bit of a joke
+// its intention is to handle all other parts of the foodListString
+// that the api didnt handle
+// that includes errors in the string: 1 apfel
+// or recipes: 1 serving of moms chocolate cake
+// ideally in the future, this will be done by a python script that does
+// real language parsing. but for now, its simply string matching
+func LLM() *LLMReturnResponse {
+	return nil
+}
+
+func CheckFoodArrayForErrors(foodListString string, foods []CustomFoodItem) []NutritionErrorObject {
 	errorList := []NutritionErrorObject{}
 	splitByComma := strings.Split(foodListString, ",")
 	if len(splitByComma) > len(foods) {
@@ -118,8 +132,48 @@ func CheckFoodArrayForErrors(foodListString string, foods []FoodItem) []Nutritio
 	return errorList
 }
 
-func GetNutritionResponse(c *gin.Context) {
-	functionName := "getNutritionResponse/"
+// this function will take a food string
+// handle contacting the api
+// and return a response object of the information
+// in most cases, this will be the most commonly called function
+func GetNutritionInfoResponse(foodString string) *NutritionInfoResponse {
+	functionName := "GetNutritionInfoResponse/"
+
+	// pass in the foodListString, get back the information from the api
+	naturalLanguageResponseObject, err := fetchNaturalLanguageResponse(foodString)
+	if util.HandleError(functionName+"Error fetching natural language response: ", err) {
+		return nil
+	}
+
+	return &NutritionInfoResponse{
+		Foods:                     makeCustomFoodItemArray(naturalLanguageResponseObject.Foods),
+		TotalNutritionInformation: MakeTotalNutritionData(naturalLanguageResponseObject.Foods),
+		Errors:                    CheckFoodArrayForErrors(foodString, makeCustomFoodItemArray(naturalLanguageResponseObject.Foods)),
+	}
+}
+
+func makeCustomFoodItemArray(foodItemArray []NutritionixFoodItem) []CustomFoodItem {
+	var ret []CustomFoodItem
+	for _, food := range foodItemArray {
+		ret = append(ret, CustomFoodItem{
+			FoodName:        food.FoodName,
+			Photo:           food.Photo,
+			ServingQty:      food.ServingQty,
+			ServingUnit:     food.ServingUnit,
+			FullNutrientMap: makeNutrientMap(food.FullNutrients),
+		})
+	}
+
+	return ret
+}
+
+// this function will be called from the front end
+// to reach out to the nutritionix api
+// get the nutrition information
+// populate the reponse object
+// and return back to the front end
+func GetNutritionJson(c *gin.Context) {
+	functionName := "getNutritionJson/"
 
 	// read the request body
 	bodyJson, err := util.ReadRequestBody(c.Request.Body)
@@ -134,17 +188,20 @@ func GetNutritionResponse(c *gin.Context) {
 		return
 	}
 
-	// pass in the foodListString, get back the information from the api
-	naturalLanguageResponseObject, err := FetchNaturalLanguageResponse(bodyObj.FoodListString)
-	if util.HandleError(functionName+"Error handling food list from request body: ", err) {
-		return
-	}
+	ret := GetNutritionInfoResponse(bodyObj.FoodListString)
+	/*
+		// pass in the foodListString, get back the information from the api
+		naturalLanguageResponseObject, err := FetchNaturalLanguageResponse(bodyObj.FoodListString)
+		if util.HandleError(functionName+"Error handling food list from request body: ", err) {
+			return
+		}
 
-	ret := NutritionInfoResponse{
-		Foods:                     naturalLanguageResponseObject.Foods,
-		TotalNutritionInformation: MakeTotalNutritionData(naturalLanguageResponseObject.Foods),
-		Errors:                    CheckFoodArrayForErrors(bodyObj.FoodListString, naturalLanguageResponseObject.Foods),
-	}
+		ret := NutritionInfoResponse{
+			Foods:                     naturalLanguageResponseObject.Foods,
+			TotalNutritionInformation: MakeTotalNutritionData(naturalLanguageResponseObject.Foods),
+			Errors:                    CheckFoodArrayForErrors(bodyObj.FoodListString, naturalLanguageResponseObject.Foods),
+		}
+	*/
 
 	//i dont think this need to exist, it can be reworked
 	/* if bodyObj.SaveToDb {
@@ -189,7 +246,7 @@ func buildNutritionixRequest(foodList string) (*http.Request, error) {
 // id values from https://docx.syndigo.com/developers/docs/list-of-all-nutrients-and-nutrient-ids-from-api
 // daily values taken from https://www.fda.gov/food/nutrition-facts-label/how-understand-and-use-nutrition-facts-label
 // when making updates, be sure to update NutritionData.ts/NutritionLabelContent
-var NutritionLabelContent = []NutritionixNutrient{
+var NutritionLabelContent = []NutritionLabelNutrient{
 	{ID: util.CaloriesId, MacroName: util.CaloriesString, Unit: "kcal", DailyValue: intPtr(2000)},
 	{ID: util.TotalCarbohydrateId, MacroName: util.TotalCarbohydrateString, Unit: "g", DailyValue: nil},
 	{ID: util.TotalFatId, MacroName: util.TotalFatString, Unit: "g", DailyValue: intPtr(78)},
@@ -212,59 +269,49 @@ func intPtr(i int) *int {
 	return &i
 }
 
-// TODO the work done on the front end should be done instead the back end,
-// maybe adding an additional property to the Response object with total info
-func MakeTotalNutritionData(foodList []FoodItem) FoodItem {
-	ret := FoodItem{}
+func MakeTotalNutritionData(foodList []NutritionixFoodItem) CustomFoodItem {
+	ret := CustomFoodItem{}
+	fullNutrientMap := make(map[int64]float64)
 
 	for _, food := range foodList {
-		ret.Calories = util.RoundToNearestDecimal(ret.Calories+food.Calories, 2)
-		ret.Cholesterol = util.RoundToNearestDecimal(ret.Cholesterol+food.Cholesterol, 2)
-		ret.DietaryFiber = util.RoundToNearestDecimal(ret.DietaryFiber+food.DietaryFiber, 2)
-		ret.Phosphorus = util.RoundToNearestDecimal(ret.Phosphorus+food.Phosphorus, 2)
-		ret.Potassium = util.RoundToNearestDecimal(ret.Potassium+food.Potassium, 2)
-		ret.Protein = util.RoundToNearestDecimal(ret.Protein+food.Protein, 2)
-		ret.SaturatedFat = util.RoundToNearestDecimal(ret.SaturatedFat+food.SaturatedFat, 2)
-		ret.Sodium = util.RoundToNearestDecimal(ret.Sodium+food.Sodium, 2)
-		ret.Sugars = util.RoundToNearestDecimal(ret.Sugars+food.Sugars, 2)
-		ret.TotalCarbohydrate = util.RoundToNearestDecimal(ret.TotalCarbohydrate+food.TotalCarbohydrate, 2)
-		ret.TotalFat = util.RoundToNearestDecimal(ret.TotalFat+food.TotalFat, 2)
-
-		fullNutrientList := []Nutrient{}
+		// fullNutrientList := []NutritionixNutrient{}
 		for _, n := range food.FullNutrients {
-			retNut := 0.0
-			for _, m := range ret.FullNutrients {
-				if n.AttrID == m.AttrID {
-					retNut = m.Value
-					break
+
+			fullNutrientMap[n.AttrID] = util.RoundToNearestDecimal(fullNutrientMap[n.AttrID]+n.Value, 2)
+			/*
+					retNut := 0.0
+					for _, m := range ret.FullNutrient {
+						if n.AttrID == m.AttrID {
+							retNut = m.Value
+							break
+						}
+					}
+					fullNutrientList = append(fullNutrientList, Nutrient{AttrID: n.AttrID, Value: retNut + n.Value})
 				}
-			}
-			fullNutrientList = append(fullNutrientList, Nutrient{AttrID: n.AttrID, Value: retNut + n.Value})
+
+				ret.FullNutrients = fullNutrientList
+
+				for key, value := range food.FullNutrientMap {
+					fullNutrientMap[key] = util.RoundToNearestDecimal(ret.FullNutrientMap[key]+value, 2)
+				}
+			*/
 		}
-
-		ret.FullNutrients = fullNutrientList
-
-		fullNutrientMap := make(map[int64]float64)
-		for key, value := range food.FullNutrientMap {
-			fullNutrientMap[key] = util.RoundToNearestDecimal(ret.FullNutrientMap[key]+value, 2)
-		}
-
-		ret.FullNutrientMap = fullNutrientMap
 	}
+	ret.FullNutrientMap = fullNutrientMap
 
 	return ret
 }
 
-func CreateNutrientMap(nutrientList []Nutrient) map[int64]float64 {
+func makeNutrientMap(nutrientList []NutritionixNutrient) map[int64]float64 {
 	nutrientMap := make(map[int64]float64)
 
 	for _, n := range nutrientList {
-		nutrientMap[n.AttrID] = n.Value
+		nutrientMap[n.AttrID] = util.RoundToNearestDecimal(nutrientMap[n.AttrID]+n.Value, 2)
 	}
 
 	return nutrientMap
 }
 
-func GetNutrient(nutritionInfo FoodItem, nutritionId int64) float64 {
+func GetNutrient(nutritionInfo CustomFoodItem, nutritionId int64) float64 {
 	return nutritionInfo.FullNutrientMap[nutritionId]
 }

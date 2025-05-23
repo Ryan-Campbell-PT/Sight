@@ -84,7 +84,7 @@ func GetDailyRecord(startDate time.Time, endDate time.Time) ([]Daily, error) {
 // TODO SaveNutritionInfo could be un-exported and strictly used as
 // a local function, so you always have to pass in the FoodItem
 // and never the nutritionId
-func SaveRecipe(recipe Recipe, nutritionId int64) error {
+func SaveRecipe(recipe CustomRecipe, nutritionId int64) error {
 	functionName := "saveToDatabase_Recipe/"
 	db := GetDatabase()
 
@@ -131,7 +131,7 @@ func SaveRecipe(recipe Recipe, nutritionId int64) error {
 		return nil
 	}
 */
-func GetAllRecipes() ([]Recipe, error) {
+func GetAllRecipes() ([]CustomRecipe, error) {
 	functionName := "getFromDatabase_AllRecipes/"
 
 	inactiveResponse, err := GetRecipes(false)
@@ -146,7 +146,7 @@ func GetAllRecipes() ([]Recipe, error) {
 	return append(activeResponse, inactiveResponse...), nil
 }
 
-func GetRecipes(active bool) ([]Recipe, error) {
+func GetRecipes(active bool) ([]CustomRecipe, error) {
 	functionName := "getFromDatabase_Recipes/"
 	db := GetDatabase()
 
@@ -165,10 +165,10 @@ func GetRecipes(active bool) ([]Recipe, error) {
 	return recipeList, nil
 }
 
-func createRecipeList(dbQuery *sql.Rows) ([]Recipe, error) {
-	var recipeList []Recipe
+func createRecipeList(dbQuery *sql.Rows) ([]CustomRecipe, error) {
+	var recipeList []CustomRecipe
 	for dbQuery.Next() {
-		var recipe Recipe
+		var recipe CustomRecipe
 		if err := dbQuery.Scan(&recipe.Id, &recipe.Name, &recipe.FoodListString, &recipe.ServingSize, &recipe.NutritionInfoId); err != nil {
 			return nil, err
 		}

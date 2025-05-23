@@ -49,11 +49,14 @@ idea is to have it in the recipe and nutrition page -->
             saveToDb: saveToDb,
         };
         try {
-            const res = await fetch("http://localhost:8080/postFoodList", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
+            const res = await fetch(
+                "http://localhost:8080/postNaturalLanguageRequest",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                },
+            );
             if (!res.ok) {
                 fetchFailCallback();
                 throw new Error();

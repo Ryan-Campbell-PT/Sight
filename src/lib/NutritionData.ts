@@ -16,16 +16,12 @@ export interface Photo {
     is_user_uploaded: boolean;
 }
 
+// aligns with nutrition_objects.go/CustomFoodItem
 export interface FoodItem {
     food_name: string;
     serving_qty: number;
     serving_unit: string;
-    serving_weight_grams: number;
-    full_nutrients: Nutrient[];
     full_nutrient_map: Map<number, number>;
-    source: number;
-    ndb_no: number;
-    alt_measures: AltMeasure[];
     photo: Photo;
 }
 

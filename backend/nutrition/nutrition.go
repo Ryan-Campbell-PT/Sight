@@ -1,7 +1,6 @@
 package nutrition
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -57,7 +56,7 @@ func SaveNutritionInfo(nutritionInfo CustomFoodItem) (int64, error) {
 // reaching out to api, marshaling/unmarshaling, building response object
 func fetchNaturalLanguageResponse(foodListString string) (*NutritionixAPINaturalLanguageResponse, error) {
 	functionName := "handle_naturalLanguage_foodList/"
-	var nutritionInfo *NutritionixAPINaturalLanguageResponse
+	var nutritionInfo NutritionixAPINaturalLanguageResponse
 
 	request, err := buildNutritionixRequest(foodListString)
 	if util.HandleError(functionName+"Error building Nutritionix request: ", err) {
@@ -69,7 +68,7 @@ func fetchNaturalLanguageResponse(foodListString string) (*NutritionixAPINatural
 		return nil, err
 	}
 
-	err = json.Unmarshal(responseByteArray, nutritionInfo)
+	err = json.Unmarshal(responseByteArray, &nutritionInfo)
 	if util.HandleError(functionName+"Error reading nutrition info from nutritionix response and unmarshaling to Food item: ", err) {
 		return nil, err
 	}
@@ -86,7 +85,7 @@ func fetchNaturalLanguageResponse(foodListString string) (*NutritionixAPINatural
 		}
 	*/
 
-	return nutritionInfo, nil
+	return &nutritionInfo, nil
 }
 
 // this function name is a bit of a joke
@@ -136,7 +135,7 @@ func CheckFoodArrayForErrors(foodListString string, foods []CustomFoodItem) []Nu
 // handle contacting the api
 // and return a response object of the information
 // in most cases, this will be the most commonly called function
-func GetNutritionInfoResponse(foodString string) *NutritionInfoResponse {
+func GetNaturalLanguageResponse(foodString string) *NaturalLanguageResponse {
 	functionName := "GetNutritionInfoResponse/"
 
 	// pass in the foodListString, get back the information from the api
@@ -145,11 +144,12 @@ func GetNutritionInfoResponse(foodString string) *NutritionInfoResponse {
 		return nil
 	}
 
-	return &NutritionInfoResponse{
+	ding := NaturalLanguageResponse{
 		Foods:                     makeCustomFoodItemArray(naturalLanguageResponseObject.Foods),
 		TotalNutritionInformation: MakeTotalNutritionData(naturalLanguageResponseObject.Foods),
 		Errors:                    CheckFoodArrayForErrors(foodString, makeCustomFoodItemArray(naturalLanguageResponseObject.Foods)),
 	}
+	return &ding
 }
 
 func makeCustomFoodItemArray(foodItemArray []NutritionixFoodItem) []CustomFoodItem {
@@ -170,10 +170,10 @@ func makeCustomFoodItemArray(foodItemArray []NutritionixFoodItem) []CustomFoodIt
 // this function will be called from the front end
 // to reach out to the nutritionix api
 // get the nutrition information
-// populate the reponse object
+// populate the response object
 // and return back to the front end
-func GetNutritionJson(c *gin.Context) {
-	functionName := "getNutritionJson/"
+func GetNaturalLanguageJson(c *gin.Context) {
+	functionName := "GetNaturalLanguageResponse/"
 
 	// read the request body
 	bodyJson, err := util.ReadRequestBody(c.Request.Body)
@@ -188,7 +188,7 @@ func GetNutritionJson(c *gin.Context) {
 		return
 	}
 
-	ret := GetNutritionInfoResponse(bodyObj.FoodListString)
+	ret := GetNaturalLanguageResponse(bodyObj.FoodListString)
 	/*
 		// pass in the foodListString, get back the information from the api
 		naturalLanguageResponseObject, err := FetchNaturalLanguageResponse(bodyObj.FoodListString)
@@ -215,32 +215,11 @@ func GetNutritionJson(c *gin.Context) {
 
 	// create return object
 	responseMarshal, err := json.Marshal(ret)
-	if util.HandleError(functionName+"Error marshalling NutritionResponseObject", err) {
+	if util.HandleError(functionName+"Error marshalling NaturalLanguageResponse", err) {
 		return
 	}
 
 	c.JSON(http.StatusOK, string(responseMarshal))
-}
-
-func buildNutritionixRequest(foodList string) (*http.Request, error) {
-	cfg := util.GetEnvConfig()
-	foodQuery := map[string]string{"query": foodList}
-	body, err := json.Marshal(foodQuery)
-	if err != nil {
-		return nil, err
-	}
-
-	url := cfg.Nutritionix_domain + cfg.Nutritionix_naturalLanguage
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	request.Header.Set("Content-Type", cfg.Nutritionix_contentType)
-	request.Header.Set("x-app-id", cfg.Nutritionix_appid)
-	request.Header.Set("x-app-key", cfg.Nutritionix_appkey)
-
-	return request, nil
 }
 
 // id values from https://docx.syndigo.com/developers/docs/list-of-all-nutrients-and-nutrient-ids-from-api

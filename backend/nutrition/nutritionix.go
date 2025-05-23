@@ -1,5 +1,13 @@
 package nutrition
 
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+
+	"github.com/Ryan-Campbell-PT/Sight/backend/util"
+)
+
 // this file contains objects
 // that represent the schema returned back from the nutritionix api
 
@@ -42,4 +50,25 @@ type NutritionixFoodItem struct {
 	FullNutrients      []NutritionixNutrient   `json:"full_nutrients"`
 	AltMeasures        []NutritionixAltMeasure `json:"alt_measures"`
 	Photo              NutritionixPhoto        `json:"photo"`
+}
+
+func buildNutritionixRequest(foodList string) (*http.Request, error) {
+	cfg := util.GetEnvConfig()
+	foodQuery := map[string]string{"query": foodList}
+	body, err := json.Marshal(foodQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	url := cfg.Nutritionix_domain + cfg.Nutritionix_naturalLanguage
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Content-Type", cfg.Nutritionix_contentType)
+	request.Header.Set("x-app-id", cfg.Nutritionix_appid)
+	request.Header.Set("x-app-key", cfg.Nutritionix_appkey)
+
+	return request, nil
 }

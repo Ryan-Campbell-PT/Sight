@@ -34,20 +34,6 @@
             total_nutrition_information: {} as FoodItem,
         });
 
-    let get_recipes = async () => {
-        await fetch("http://localhost:8080/getRecipes", {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                var jsonData: RecipeResponseObject = JSON.parse(data);
-                Object.assign(userRecipeList, jsonData);
-            })
-            .catch((err) => {
-                throw new Error(err);
-            });
-    };
     // onMount(() => {get_recipes()})
 </script>
 

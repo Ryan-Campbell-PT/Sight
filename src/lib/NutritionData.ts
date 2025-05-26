@@ -37,10 +37,10 @@ export interface NaturalLanguageResponseObject {
 }
 
 export interface RecipeResponseObject {
-    recipeList: Recipe[];
+    recipeList: CustomRecipe[];
 }
 
-export interface Recipe {
+export interface CustomRecipe {
     id: number;
     recipe_name: string;
     food_string: string;

@@ -2,14 +2,19 @@
 pass in an empty Recipe, and have a prop that says "isNew" or something
 and then when a button press, post it to the db and remove the object from the page -->
 <script lang="ts">
-    import type { Recipe } from "$lib/NutritionData";
+    import type { CustomRecipe } from "$lib/NutritionData";
 
-    let { isEditable, recipe }: { isEditable: boolean; recipe: Recipe } =
+    let { isEditable, recipe }: { isEditable: boolean; recipe: CustomRecipe } =
         $props();
 
     let isChecked: boolean = $state(false);
+    let isModified: boolean = $state(false);
+    let recipeIsModified = () => {
+        isModified = true;
+    };
     let setIsChecked = () => {
         isChecked = !isChecked;
+        recipeIsModified();
     };
 </script>
 
@@ -34,6 +39,7 @@ and then when a button press, post it to the db and remove the object from the p
             {recipe.recipe_name}
         </div>
     </div>
+    <!-- food string should be a drop down, not always visible -->
     <div class="">
         {recipe.food_string}
     </div>

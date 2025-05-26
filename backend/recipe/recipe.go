@@ -128,7 +128,7 @@ func saveRecipe(c *gin.Context) {
 	}
 
 	// get the nutrition information from the food string
-	nutritionInfo := nutrition.GetNutritionInfoResponse(recipeObj.FoodListString)
+	nutritionInfo := nutrition.GetNaturalLanguageResponse(recipeObj.FoodListString)
 	// nutritionInfo, err := nutrition.GetNutritionInfoResponse(recipeObj.FoodListString)
 	// if util.HandleError(functionName+"Error getting total nutrition info from food string: ", err) {
 	// 	return

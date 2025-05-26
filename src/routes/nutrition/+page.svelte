@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
     import type {
-        Recipe,
+        CustomRecipe,
         NaturalLanguageResponseObject,
         RecipeResponseObject,
         FoodItem,
@@ -9,7 +9,6 @@
     import NutritionDisplay from "$lib/components/NutritionDisplay.svelte";
     import NutritionLabel from "$lib/components/NutritionLabel.svelte";
     import { onMount } from "svelte";
-    import CustomRecipe from "$lib/components/CustomRecipe.svelte";
     import { error } from "@sveltejs/kit";
     import FoodListTextBox from "$lib/components/NaturalLanguageTextBox.svelte";
 

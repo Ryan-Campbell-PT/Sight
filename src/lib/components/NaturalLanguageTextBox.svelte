@@ -25,7 +25,7 @@ idea is to have it in the recipe and nutrition page -->
         primaryButtonText: string;
         secondaryButtonText?: string;
         secondaryButtonFunction?: () => void;
-        nutritionResponse: NaturalLanguageResponseObject;
+        nutritionResponse?: NaturalLanguageResponseObject;
         fetchSuccessCallback: () => void;
         fetchFailCallback: () => void;
     } = $props();
@@ -65,7 +65,9 @@ idea is to have it in the recipe and nutrition page -->
                 await res.json(),
             ) as NaturalLanguageResponseObject;
             const responseObj = mapCorrection(json);
-            Object.assign(nutritionResponse, responseObj);
+            if (nutritionResponse) {
+                Object.assign(nutritionResponse, responseObj);
+            }
             fetchSuccessCallback();
         } catch (err) {
             throw new Error();

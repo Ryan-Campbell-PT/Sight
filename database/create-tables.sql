@@ -23,21 +23,23 @@ DROP TABLE IF EXISTS daily;
 CREATE TABLE daily (
   id             INT AUTO_INCREMENT NOT NULL,
   food_string    VARCHAR(255) NOT NULL,
-  date           VARCHAR(64) NOT NULL,
+  date           DATE NOT NULL,
   nutrition_id   INT NOT NULL,
   FOREIGN KEY (nutrition_id) REFERENCES nutrition_info(id),
   INDEX (nutrition_id),
   PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS recipe;
-CREATE TABLE recipe (
+DROP TABLE IF EXISTS custom_recipe;
+CREATE TABLE custom_recipe (
   id              INT AUTO_INCREMENT NOT NULL,
   recipe_name     VARCHAR(255) NOT NULL,
+  alt_recipe_names VARCHAR(512),
   food_string     VARCHAR(255) NOT NULL,
   serving_size    INT NOT NULL,
-  active          BIT NOT NULL,
+  active          BOOLEAN NOT NULL,
   nutrition_id    INT NOT NULL,
+  -- last_modified DATE NOT NULL,
   FOREIGN KEY (nutrition_id) REFERENCES nutrition_info(id),
   INDEX (nutrition_id),
   PRIMARY KEY (id)

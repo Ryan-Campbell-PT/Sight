@@ -20,7 +20,7 @@ and then when a button press, post it to the db and remove the object from the p
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-    class="border border-3 border-dark my-4"
+    class="border border-3 border-dark m-3"
     style="width: 100px; height: 100px;"
     onkeydown={setIsChecked}
     onclick={setIsChecked}
@@ -43,6 +43,7 @@ and then when a button press, post it to the db and remove the object from the p
     <div class="">
         {recipe.food_string}
     </div>
+    <div></div>
 </div>
 
 <!-- old code  -->

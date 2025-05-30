@@ -36,7 +36,8 @@ export interface NaturalLanguageResponseObject {
     errors: NutritionErrorObject[];
 }
 
-export interface RecipeResponseObject {
+// aligns with recipe_objects.go/GetUserRecipesResponseObject
+export interface GetUserRecipesResponseObject {
     recipeList: CustomRecipe[];
 }
 

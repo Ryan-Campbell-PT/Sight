@@ -4,8 +4,9 @@ import (
 	"github.com/Ryan-Campbell-PT/Sight/backend/database"
 )
 
-type GetRecipe_RequestBody struct {
-	RecipeList []database.CustomRecipe `json:"recipe_list"`
+// aligns with NutritionData.ts/GetUserRecipesResponseObject
+type GetUserRecipesResponseObject struct {
+	RecipeList []database.CustomRecipe `json:"recipeList"`
 }
 
 // aligns with RecipeRequestObject

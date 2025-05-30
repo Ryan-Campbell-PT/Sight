@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/Ryan-Campbell-PT/Sight/backend/nutrition"
+	"github.com/Ryan-Campbell-PT/Sight/backend/recipe"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -35,7 +36,8 @@ func RunServer() {
 	// router.POST("/postSaveRecipe", post_saveRecipe)
 	// router.GET("/getActiveRecipes", get_activeRecipes)
 	// router.GET("/getInactiveRecipes", get_inactiveRecipes)
-	// router.GET("/getAllRecipes", get_allRecipes)
+	router.GET("/getUserRecipes", recipe.GetUserRecipesJson)
+	// router.GET("/getInctiveRecipes", recipe.GetUserInactiveRecipesJson)
 
 	router.Run(":8080")
 }

@@ -39,7 +39,7 @@ CREATE TABLE custom_recipe
   serving_size INT NOT NULL,
   active BIT NOT NULL,
   nutrition_id INT NOT NULL,
-  last_modified DATE NOT NULL,
+  -- last_modified DATE NOT NULL,
   FOREIGN KEY (nutrition_id) REFERENCES nutrition_info(id)
 );
 

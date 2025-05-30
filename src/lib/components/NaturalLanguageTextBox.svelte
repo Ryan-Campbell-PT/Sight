@@ -9,11 +9,11 @@ idea is to have it in the recipe and nutrition page -->
     // state
     let foodListString = $state("");
     let currentSelectedDate = $state(formatDateToYYYYMMDD(new Date()));
-
     // cant do type safety inline, have to do it seperately
     // the ?: is the syntax for optional parameters in 'Runes Mode'
     let {
         displayCalendar,
+        isLoading = $bindable(),
         primaryButtonText,
         secondaryButtonText = "",
         secondaryButtonFunction = () => {},
@@ -22,6 +22,7 @@ idea is to have it in the recipe and nutrition page -->
         fetchFailCallback = () => {},
     }: {
         displayCalendar: boolean;
+        isLoading: boolean;
         primaryButtonText: string;
         secondaryButtonText?: string;
         secondaryButtonFunction?: () => void;
@@ -42,12 +43,13 @@ idea is to have it in the recipe and nutrition page -->
         return response;
     };
 
-    let post_foodList = async (saveToDb = false) => {
+    let post_foodList = async () => {
         const body = {
             foodListString: foodListString,
             date: currentSelectedDate,
-            saveToDb: saveToDb,
+            // saveToDb: saveToDb,
         };
+        isLoading = true;
         try {
             const res = await fetch(
                 "http://localhost:8080/postNaturalLanguageRequest",
@@ -57,6 +59,7 @@ idea is to have it in the recipe and nutrition page -->
                     body: JSON.stringify(body),
                 },
             );
+
             if (!res.ok) {
                 fetchFailCallback();
                 throw new Error();
@@ -71,6 +74,8 @@ idea is to have it in the recipe and nutrition page -->
             fetchSuccessCallback();
         } catch (err) {
             throw new Error();
+        } finally {
+            isLoading = false;
         }
     };
 </script>
@@ -101,7 +106,7 @@ idea is to have it in the recipe and nutrition page -->
                 />
             </Label>
         {/if}
-        <Button onclick={() => post_foodList()}>{primaryButtonText}</Button>
+        <Button onclick={post_foodList}>{primaryButtonText}</Button>
         {#if secondaryButtonText}
             <Button onclick={secondaryButtonFunction}
                 >{secondaryButtonText}</Button

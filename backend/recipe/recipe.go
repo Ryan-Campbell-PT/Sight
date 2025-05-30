@@ -1,7 +1,6 @@
 package recipe
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"regexp"
@@ -39,79 +38,6 @@ func parseCustomRecipe(foodString string) (*CustomRecipeParse, error) {
 	}
 
 	return &CustomRecipeParse{RecipeName: foodName, NumServings: servings, FoodString: trimmedFoodString}, nil
-}
-
-func scanRecipeItem(row *sql.Row) (*database.CustomRecipe, error) {
-	functionName := "scanRecipeItem/"
-	var recipeObj database.CustomRecipe
-
-	err := row.Scan(
-		&recipeObj.Id,
-		&recipeObj.Name,
-		&recipeObj.AlternativeRecipeNames,
-		&recipeObj.ServingSize,
-		&recipeObj.Active,
-		&recipeObj.NutritionInfoId,
-		&recipeObj.LastModified,
-	)
-
-	if util.HandleError(functionName+"Error scanning CustomRecipe: ", err) {
-		return nil, err
-	}
-
-	return &recipeObj, nil
-}
-
-// returns the Id of the CustomRecipe if successful
-func IsRecipeItem(foodString string) int64 {
-	functionName := "IsRecipeItem/"
-	db := database.GetDatabase()
-	parse, err := parseCustomRecipe(foodString)
-	if util.HandleError(functionName+"Error parsing custom recipe: ", err) {
-		return -1
-	}
-
-	// TODO CONTAINS needs to be checked
-	sqlRow := db.QueryRow(`
-		SELECT *
-		FROM recipe
-		WHERE food_string
-		LIKE '@FoodString' OR alt_recipe_names CONTAINS '@FoodString'
-	`,
-		sql.Named("FoodString", parse.FoodString))
-
-	if util.HandleError(functionName+"Error querying recipe from food_string: "+foodString, sqlRow.Err()) {
-		return -1
-	}
-
-	recipeItem, err := scanRecipeItem(sqlRow)
-	if util.HandleError(functionName+"Error scanning recipe item:", err) {
-		return -1
-	}
-
-	return recipeItem.Id
-}
-
-// while there is a recipe.Recipe object type
-// database schema objects are not to be manipulated, only used to make different objects
-// so in this case, a CustomFoodItem is being returned, with data filled from Recipe
-func GetRecipeItem(foodString string) *database.CustomRecipe {
-	functionName := "GetRecipeItem/"
-	db := database.GetDatabase()
-
-	recipeId := IsRecipeItem(foodString)
-	if recipeId == -1 {
-		return nil
-	}
-
-	sqlRow := db.QueryRow(`SELECT * FROM recipe WHERE id=@RecipeId`, sql.Named("RecipeId", recipeId))
-
-	recipeItem, err := scanRecipeItem(sqlRow)
-	if util.HandleError(functionName+"Error scanning recipe item: ", err) {
-		return nil
-	}
-
-	return recipeItem
 }
 
 func saveRecipe(c *gin.Context) {
@@ -152,13 +78,16 @@ func saveRecipe(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
 }
 
-func get_recipes(c *gin.Context) {
-	recipes, err := database.GetAllRecipes()
-	if util.HandleError("Server.go/Error getting recipes from database: ", err) {
-		c.JSON(http.StatusBadRequest, "")
-	}
+func GetUserRecipesJson(c *gin.Context) {
+	activeRecipes := GetUsersActiveRecipes()
+	inactiveRecipes := GetUsersInactiveRecipes()
 
-	recipeJson, err := json.Marshal(recipes)
+	// if util.HandleError("Server.go/Error getting recipes from database: ", err) {
+	// 	c.JSON(http.StatusBadRequest, "")
+	// }
+
+	ret := GetUserRecipesResponseObject{RecipeList: append(activeRecipes, inactiveRecipes...)}
+	recipeJson, err := json.Marshal(ret)
 	if util.HandleError("Error marshaling recipeResponse into recipeJson: ", err) {
 		return
 	}

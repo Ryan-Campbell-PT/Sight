@@ -17,7 +17,7 @@ type CustomRecipe struct {
 	Id                     int64     `json:"id"`
 	Name                   string    `json:"recipe_name"`
 	FoodListString         string    `json:"food_string"`
-	AlternativeRecipeNames string    `json:"alt_recipe_names"`
+	AlternativeRecipeNames *string   `json:"alt_recipe_names,omitempty"`
 	ServingSize            int64     `json:"serving_size"`
 	Active                 bool      `json:"active"`
 	NutritionInfoId        int64     `json:"nutrition_id"`

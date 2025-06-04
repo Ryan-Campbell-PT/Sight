@@ -3,42 +3,12 @@ package recipe
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/Ryan-Campbell-PT/Sight/backend/database"
 	"github.com/Ryan-Campbell-PT/Sight/backend/nutrition"
 	"github.com/Ryan-Campbell-PT/Sight/backend/util"
 	"github.com/gin-gonic/gin"
 )
-
-// take a the food list string provided by the user
-// and turn it into an object representing the important info
-func parseCustomRecipe(foodString string) (*CustomRecipeParse, error) {
-	trimmedFoodString := strings.ToLower(strings.TrimSpace(foodString))
-
-	// string: 1.5 servings of moms chocolate cake
-	// Match pattern: number + "servings of" OR "serving of" + the rest
-	re := regexp.MustCompile(`(?i)^\s*([\d.]+)\s+servings?\s+of\s+(.+)$`)
-
-	matches := re.FindStringSubmatch(trimmedFoodString)
-	if len(matches) != 3 {
-		// return 0, "", fmt.Errorf("input did not match expected format")
-		return nil, gin.Error{}
-	}
-
-	servingsStr := matches[1]
-	foodName := strings.TrimSpace(matches[2])
-
-	servings, err := strconv.ParseFloat(servingsStr, 64)
-	if err != nil {
-		// return 0, "", fmt.Errorf("invalid serving number: %v", err)
-		return nil, err
-	}
-
-	return &CustomRecipeParse{RecipeName: foodName, NumServings: servings, FoodString: trimmedFoodString}, nil
-}
 
 func saveRecipe(c *gin.Context) {
 	functionName := "saveRecipe/"

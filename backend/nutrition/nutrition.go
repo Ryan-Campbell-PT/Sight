@@ -88,17 +88,6 @@ func fetchNaturalLanguageResponse(foodListString string) (*NutritionixAPINatural
 	return &nutritionInfo, nil
 }
 
-// this function name is a bit of a joke
-// its intention is to handle all other parts of the foodListString
-// that the api didnt handle
-// that includes errors in the string: 1 apfel
-// or recipes: 1 serving of moms chocolate cake
-// ideally in the future, this will be done by a python script that does
-// real language parsing. but for now, its simply string matching
-func LLM() *LLMReturnResponse {
-	return nil
-}
-
 func CheckFoodArrayForErrors(foodListString string, foods []CustomFoodItem) []NutritionErrorObject {
 	errorList := []NutritionErrorObject{}
 	splitByComma := strings.Split(foodListString, ",")

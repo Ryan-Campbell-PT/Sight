@@ -50,10 +50,6 @@ type NaturalLanguageResponse struct {
 	Errors                    []NutritionErrorObject `json:"errors"`
 }
 
-type LLMReturnResponse struct {
-	Errors []NutritionErrorObject `json:"errors"`
-}
-
 // the response directly from the API
 type NutritionixAPINaturalLanguageResponse struct {
 	Foods []NutritionixFoodItem `json:"foods"`

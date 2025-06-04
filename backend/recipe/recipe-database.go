@@ -121,32 +121,36 @@ func cacheAllRecipes() error {
 
 // returns the Id of the CustomRecipe if successful
 func IsRecipeItem(foodString string) int64 {
-	functionName := "IsRecipeItem/"
-	db := database.GetDatabase()
-	parse, err := parseCustomRecipe(foodString)
-	if util.HandleError(functionName+"Error parsing custom recipe: ", err) {
-		return -1
-	}
+	/*
+		functionName := "IsRecipeItem/"
+			db := database.GetDatabase()
+			parse, err := parseCustomRecipe(foodString)
+			if util.HandleError(functionName+"Error parsing custom recipe: ", err) {
+				return -1
+			}
 
-	// TODO CONTAINS needs to be checked
-	sqlRow := db.QueryRow(`
-		SELECT *
-		FROM recipe
-		WHERE food_string
-		LIKE '@FoodString' OR alt_recipe_names CONTAINS '@FoodString'
-	`,
-		sql.Named("FoodString", parse.FoodString))
+			// TODO CONTAINS needs to be checked
+			sqlRow := db.QueryRow(`
+				SELECT *
+				FROM recipe
+				WHERE food_string
+				LIKE '@FoodString' OR alt_recipe_names CONTAINS '@FoodString'
+			`,
+				sql.Named("FoodString", parse.FoodString))
 
-	if util.HandleError(functionName+"Error querying recipe from food_string: "+foodString, sqlRow.Err()) {
-		return -1
-	}
+			if util.HandleError(functionName+"Error querying recipe from food_string: "+foodString, sqlRow.Err()) {
+				return -1
+			}
 
-	recipeItem, err := scanRecipeItem(sqlRow)
-	if util.HandleError(functionName+"Error scanning recipe item:", err) {
-		return -1
-	}
+			recipeItem, err := scanRecipeItem(sqlRow)
+			if util.HandleError(functionName+"Error scanning recipe item:", err) {
+				return -1
+			}
 
-	return recipeItem.Id
+			return recipeItem.Id
+	*/
+
+	return -1
 }
 
 // while there is a recipe.Recipe object type

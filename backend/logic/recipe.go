@@ -1,0 +1,327 @@
+package logic
+
+import (
+	"database/sql"
+	"encoding/json"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/Ryan-Campbell-PT/Sight/backend/models"
+	"github.com/Ryan-Campbell-PT/Sight/backend/util"
+	"github.com/gin-gonic/gin"
+	"github.com/patrickmn/go-cache"
+)
+
+// TODO SaveNutritionInfo could be un-exported and strictly used as
+// a local function, so you always have to pass in the FoodItem
+// and never the nutritionId
+func SaveRecipe(recipe models.CustomRecipe, nutritionId int64) error {
+	functionName := "saveToDatabase_Recipe/"
+	db := GetDatabase()
+
+	_, err := db.Exec(`INSERT INTO recipe(recipe_name, food_string, serving_size, active, nutrition_id)
+			VALUES (@RecipeName, @FoodString, @ServingSize, @Active, @NutritionId)`,
+		sql.Named("RecipeName", recipe.Name),
+		sql.Named("FoodString", recipe.FoodListString),
+		sql.Named("ServingSize", recipe.ServingSize),
+		sql.Named("Active", true),
+		sql.Named("NutritionId", nutritionId),
+	)
+
+	if util.HandleError(functionName+"Error saving recipe information to db: ", err) {
+		return err
+	}
+
+	return nil
+}
+
+func GetAllRecipes() ([]models.CustomRecipe, error) {
+	functionName := "getFromDatabase_AllRecipes/"
+
+	inactiveResponse, err := GetRecipes(false)
+	if util.HandleError(functionName+"Error getting inactive recipes: ", err) {
+		return nil, err
+	}
+	activeResponse, err := GetRecipes(true)
+	if util.HandleError(functionName+"Error getting active recipes: ", err) {
+		return nil, err
+	}
+
+	return append(activeResponse, inactiveResponse...), nil
+}
+
+func GetRecipes(active bool) ([]models.CustomRecipe, error) {
+	functionName := "getFromDatabase_Recipes/"
+	db := GetDatabase()
+
+	response, err := db.Query("SELECT * FROM recipe WHERE active = @Active", sql.Named("Active", active))
+
+	if util.HandleError("Database.go/Error grabbing recipes: ", err) {
+		return nil, err
+	}
+	defer response.Close()
+
+	recipeList, err := createRecipeList(response)
+	if util.HandleError(functionName+"Error getting recipe list from db query: ", err) {
+		return nil, err
+	}
+
+	return recipeList, nil
+}
+
+func createRecipeList(dbQuery *sql.Rows) ([]models.CustomRecipe, error) {
+	var recipeList []models.CustomRecipe
+	for dbQuery.Next() {
+		var recipe models.CustomRecipe
+		if err := dbQuery.Scan(&recipe.Id, &recipe.Name, &recipe.FoodListString, &recipe.ServingSize, &recipe.NutritionInfoId); err != nil {
+			return nil, err
+		}
+		recipeList = append(recipeList, recipe)
+	}
+
+	return recipeList, nil
+}
+
+var (
+	c                    *cache.Cache
+	userRecipeListString = "UsersRecipeList"
+)
+
+// Interface that matches both *sql.Row and *sql.Rows
+type scanner interface {
+	Scan(dest ...any) error
+}
+
+func initCache() {
+	c = cache.New(5*time.Minute, 10*time.Minute)
+	cacheAllRecipes()
+}
+
+func scanRecipeItem(row *sql.Row) (*models.CustomRecipe, error) {
+	return scanRecipeFromScanner(row)
+}
+
+func scanRecipeFromScanner(s scanner) (*models.CustomRecipe, error) {
+	functionName := "scanRecipeItem/"
+	var recipeObj models.CustomRecipe
+
+	err := s.Scan(
+		&recipeObj.Id,
+		&recipeObj.Name,
+		&recipeObj.AlternativeRecipeNames,
+		&recipeObj.FoodListString,
+		&recipeObj.ServingSize,
+		&recipeObj.Active,
+		&recipeObj.NutritionInfoId,
+		// &recipeObj.LastModified,
+	)
+
+	if util.HandleError(functionName+"Error scanning CustomRecipe: ", err) {
+		return nil, err
+	}
+
+	return &recipeObj, nil
+}
+
+func scanRecipeRows(rows *sql.Rows) ([]models.CustomRecipe, error) {
+	functionName := "scanRecipeRows/"
+	var recipeList []models.CustomRecipe
+
+	for rows.Next() {
+		recipeObj, err := scanRecipeFromScanner(rows)
+		if util.HandleError(functionName+"Error scanning recipe from scanner: ", err) {
+			return nil, err
+		}
+		recipeList = append(recipeList, *recipeObj)
+	}
+
+	return recipeList, nil
+}
+
+func getUsersRecipes(isActive bool) []models.CustomRecipe {
+	initCache()
+	var retRecipeList []models.CustomRecipe
+	if cacheRecipeList, found := c.Get(userRecipeListString); found {
+		rList := cacheRecipeList.([]models.CustomRecipe)
+		for _, recipe := range rList {
+			if recipe.Active == isActive {
+				retRecipeList = append(retRecipeList, recipe)
+			}
+		}
+
+		return retRecipeList
+	}
+
+	return nil
+}
+
+func GetUsersInactiveRecipes() []models.CustomRecipe {
+	return getUsersRecipes(false)
+}
+
+func GetUsersActiveRecipes() []models.CustomRecipe {
+	return getUsersRecipes(true)
+}
+
+// returns the Id of the CustomRecipe if successful
+func IsActiveRecipeItem(foodString string) int {
+	// functionName := "IsActiveRecipeItem/"
+	return 0
+}
+
+func cacheAllRecipes() error {
+	functionName := "cacheAllRecipes/"
+	db := GetDatabase()
+	// TODO will need to add a clause for UserId when thats completed
+	rows, err := db.Query(`SELECT * FROM custom_recipe`)
+	if util.HandleError(functionName+"Error getting all recipes: ", err) {
+		return err
+	}
+	defer rows.Close()
+
+	recipeList, err := scanRecipeRows(rows)
+	if util.HandleError(functionName+"Error scanning recipe rows: ", err) {
+		return err
+	}
+
+	// TODO dont think this works
+	c.Set(userRecipeListString, recipeList, cache.DefaultExpiration)
+	return nil
+}
+
+// returns the Id of the CustomRecipe if successful
+func IsRecipeItem(foodString string) int64 {
+	functionName := "IsRecipeItem/"
+	db := GetDatabase()
+	parse, err := parseCustomRecipe(foodString)
+	if util.HandleError(functionName+"Error parsing custom recipe: ", err) {
+		return -1
+	}
+
+	// TODO CONTAINS needs to be checked
+	sqlRow := db.QueryRow(`
+		SELECT *
+		FROM recipe
+		WHERE food_string
+		LIKE '@FoodString' OR alt_recipe_names CONTAINS '@FoodString'
+	`,
+		sql.Named("FoodString", parse.FoodString))
+
+	if util.HandleError(functionName+"Error querying recipe from food_string: "+foodString, sqlRow.Err()) {
+		return -1
+	}
+
+	recipeItem, err := scanRecipeItem(sqlRow)
+	if util.HandleError(functionName+"Error scanning recipe item:", err) {
+		return -1
+	}
+
+	return recipeItem.Id
+}
+
+// while there is a recipe.Recipe object type
+// database schema objects are not to be manipulated, only used to make different objects
+// so in this case, a CustomFoodItem is being returned, with data filled from Recipe
+func GetRecipeItem(foodString string) *models.CustomRecipe {
+	functionName := "GetRecipeItem/"
+	db := GetDatabase()
+
+	recipeId := IsRecipeItem(foodString)
+	if recipeId == -1 {
+		return nil
+	}
+
+	sqlRow := db.QueryRow(`SELECT * FROM recipe WHERE id=@RecipeId`, sql.Named("RecipeId", recipeId))
+
+	recipeItem, err := scanRecipeItem(sqlRow)
+	if util.HandleError(functionName+"Error scanning recipe item: ", err) {
+		return nil
+	}
+
+	return recipeItem
+}
+
+// take a the food list string provided by the user
+// and turn it into an object representing the important info
+func parseCustomRecipe(foodString string) (*models.CustomRecipeParse, error) {
+	trimmedFoodString := strings.ToLower(strings.TrimSpace(foodString))
+
+	// string: 1.5 servings of moms chocolate cake
+	// Match pattern: number + "servings of" OR "serving of" + the rest
+	re := regexp.MustCompile(`(?i)^\s*([\d.]+)\s+servings?\s+of\s+(.+)$`)
+
+	matches := re.FindStringSubmatch(trimmedFoodString)
+	if len(matches) != 3 {
+		// return 0, "", fmt.Errorf("input did not match expected format")
+		return nil, gin.Error{}
+	}
+
+	servingsStr := matches[1]
+	foodName := strings.TrimSpace(matches[2])
+
+	servings, err := strconv.ParseFloat(servingsStr, 64)
+	if err != nil {
+		// return 0, "", fmt.Errorf("invalid serving number: %v", err)
+		return nil, err
+	}
+
+	return &models.CustomRecipeParse{RecipeName: foodName, NumServings: servings, FoodString: trimmedFoodString}, nil
+}
+
+func saveRecipe(c *gin.Context) {
+	functionName := "saveRecipe/"
+	body, err := util.ReadRequestBody(c.Request.Body)
+	if util.HandleError(functionName+"Error reading recipe request body: ", err) {
+		return
+	}
+
+	var recipeObj models.SaveRecipeRequestBody
+	err = json.Unmarshal(body, &recipeObj)
+	if util.HandleError(functionName+"Error reading body from recipe request: ", err) {
+		return
+	}
+
+	// get the nutrition information from the food string
+	nutritionInfo := GetNaturalLanguageResponse(recipeObj.FoodListString)
+	// nutritionInfo, err := nutrition.GetNutritionInfoResponse(recipeObj.FoodListString)
+	// if util.HandleError(functionName+"Error getting total nutrition info from food string: ", err) {
+	// 	return
+	// }
+
+	nutritionId, err := SaveNutritionInfo(nutritionInfo.TotalNutritionInformation)
+	if util.HandleError(functionName+"Error saving nutrition information to database: ", err) {
+		return
+	}
+
+	var recipe models.CustomRecipe
+	recipe.Active = true
+	recipe.FoodListString = recipeObj.FoodListString
+	recipe.Name = recipeObj.RecipeName
+	recipe.ServingSize = recipeObj.NumServings
+	err = SaveRecipe(recipe, nutritionId)
+	if util.HandleError(functionName+"Error saving recipe: ", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
+
+func GetUserRecipesJson(c *gin.Context) {
+	activeRecipes := GetUsersActiveRecipes()
+	inactiveRecipes := GetUsersInactiveRecipes()
+
+	// if util.HandleError("Server.go/Error getting recipes from database: ", err) {
+	// 	c.JSON(http.StatusBadRequest, "")
+	// }
+
+	ret := models.GetUserRecipesResponseObject{RecipeList: append(activeRecipes, inactiveRecipes...)}
+	recipeJson, err := json.Marshal(ret)
+	if util.HandleError("Error marshaling recipeResponse into recipeJson: ", err) {
+		return
+	}
+
+	c.JSON(http.StatusOK, string(recipeJson))
+}

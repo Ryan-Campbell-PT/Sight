@@ -1,12 +1,13 @@
-package nutrition
+package logic
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"github.com/Ryan-Campbell-PT/Sight/backend/database"
+	"github.com/Ryan-Campbell-PT/Sight/backend/models"
 	"github.com/Ryan-Campbell-PT/Sight/backend/util"
 	"github.com/gin-gonic/gin"
 )
@@ -14,8 +15,8 @@ import (
 // this function saves nutrition information to the database
 // in most cases, this nutritionInfo variable
 // will be a TotalNutritionInformation variable
-func SaveNutritionInfo(nutritionInfo CustomFoodItem) (int64, error) {
-	db := database.GetDatabase()
+func SaveNutritionInfo(nutritionInfo models.CustomFoodItem) (int64, error) {
+	db := GetDatabase()
 
 	// SELECT at the bottom grabs the id of the row that was just created
 	row := db.QueryRow(`
@@ -54,9 +55,9 @@ func SaveNutritionInfo(nutritionInfo CustomFoodItem) (int64, error) {
 // this function will take the list of foods provided by a user
 // and handle all the work associated with that string:
 // reaching out to api, marshaling/unmarshaling, building response object
-func fetchNaturalLanguageResponse(foodListString string) (*NutritionixAPINaturalLanguageResponse, error) {
+func fetchNaturalLanguageResponse(foodListString string) (*models.NutritionixAPINaturalLanguageResponse, error) {
 	functionName := "handle_naturalLanguage_foodList/"
-	var nutritionInfo NutritionixAPINaturalLanguageResponse
+	var nutritionInfo models.NutritionixAPINaturalLanguageResponse
 
 	request, err := buildNutritionixRequest(foodListString)
 	if util.HandleError(functionName+"Error building Nutritionix request: ", err) {
@@ -88,19 +89,8 @@ func fetchNaturalLanguageResponse(foodListString string) (*NutritionixAPINatural
 	return &nutritionInfo, nil
 }
 
-// this function name is a bit of a joke
-// its intention is to handle all other parts of the foodListString
-// that the api didnt handle
-// that includes errors in the string: 1 apfel
-// or recipes: 1 serving of moms chocolate cake
-// ideally in the future, this will be done by a python script that does
-// real language parsing. but for now, its simply string matching
-func LLM() *LLMReturnResponse {
-	return nil
-}
-
-func CheckFoodArrayForErrors(foodListString string, foods []CustomFoodItem) []NutritionErrorObject {
-	errorList := []NutritionErrorObject{}
+func CheckFoodArrayForErrors(foodListString string, foods []models.CustomFoodItem) []models.NutritionErrorObject {
+	errorList := []models.NutritionErrorObject{}
 	splitByComma := strings.Split(foodListString, ",")
 	if len(splitByComma) > len(foods) {
 		responseArrayIndex := 0
@@ -109,7 +99,7 @@ func CheckFoodArrayForErrors(foodListString string, foods []CustomFoodItem) []Nu
 
 			// If all known foods have been matched, everything else is an error
 			if responseArrayIndex >= len(foods) {
-				errorList = append(errorList, NutritionErrorObject{ErrorString: inputStringTrimmed})
+				errorList = append(errorList, models.NutritionErrorObject{ErrorString: inputStringTrimmed})
 				continue
 			}
 
@@ -123,7 +113,7 @@ func CheckFoodArrayForErrors(foodListString string, foods []CustomFoodItem) []Nu
 				responseArrayIndex++
 			} else {
 				// if there is an issue, record the string and add it to the ErrorObject array
-				errorList = append(errorList, NutritionErrorObject{ErrorString: inputStringTrimmed})
+				errorList = append(errorList, models.NutritionErrorObject{ErrorString: inputStringTrimmed})
 			}
 		}
 	}
@@ -135,7 +125,7 @@ func CheckFoodArrayForErrors(foodListString string, foods []CustomFoodItem) []Nu
 // handle contacting the api
 // and return a response object of the information
 // in most cases, this will be the most commonly called function
-func GetNaturalLanguageResponse(foodString string) *NaturalLanguageResponse {
+func GetNaturalLanguageResponse(foodString string) *models.NaturalLanguageResponse {
 	functionName := "GetNutritionInfoResponse/"
 
 	// pass in the foodListString, get back the information from the api
@@ -144,7 +134,7 @@ func GetNaturalLanguageResponse(foodString string) *NaturalLanguageResponse {
 		return nil
 	}
 
-	ding := NaturalLanguageResponse{
+	ding := models.NaturalLanguageResponse{
 		Foods:                     makeCustomFoodItemArray(naturalLanguageResponseObject.Foods),
 		TotalNutritionInformation: MakeTotalNutritionData(naturalLanguageResponseObject.Foods),
 		Errors:                    CheckFoodArrayForErrors(foodString, makeCustomFoodItemArray(naturalLanguageResponseObject.Foods)),
@@ -152,10 +142,10 @@ func GetNaturalLanguageResponse(foodString string) *NaturalLanguageResponse {
 	return &ding
 }
 
-func makeCustomFoodItemArray(foodItemArray []NutritionixFoodItem) []CustomFoodItem {
-	var ret []CustomFoodItem
+func makeCustomFoodItemArray(foodItemArray []models.NutritionixFoodItem) []models.CustomFoodItem {
+	var ret []models.CustomFoodItem
 	for _, food := range foodItemArray {
-		ret = append(ret, CustomFoodItem{
+		ret = append(ret, models.CustomFoodItem{
 			FoodName:        food.FoodName,
 			Photo:           food.Photo,
 			ServingQty:      food.ServingQty,
@@ -182,7 +172,7 @@ func GetNaturalLanguageJson(c *gin.Context) {
 	}
 
 	// put the request body into an object
-	var bodyObj GetNutritionRequestBody
+	var bodyObj models.GetNutritionRequestBody
 	err = json.Unmarshal(bodyJson, &bodyObj)
 	if util.HandleError(functionName+"Error reading body from query request: ", err) {
 		return
@@ -222,34 +212,8 @@ func GetNaturalLanguageJson(c *gin.Context) {
 	c.JSON(http.StatusOK, string(responseMarshal))
 }
 
-// id values from https://docx.syndigo.com/developers/docs/list-of-all-nutrients-and-nutrient-ids-from-api
-// daily values taken from https://www.fda.gov/food/nutrition-facts-label/how-understand-and-use-nutrition-facts-label
-// when making updates, be sure to update NutritionData.ts/NutritionLabelContent
-var NutritionLabelContent = []NutritionLabelNutrient{
-	{ID: util.CaloriesId, MacroName: util.CaloriesString, Unit: "kcal", DailyValue: intPtr(2000)},
-	{ID: util.TotalCarbohydrateId, MacroName: util.TotalCarbohydrateString, Unit: "g", DailyValue: nil},
-	{ID: util.TotalFatId, MacroName: util.TotalFatString, Unit: "g", DailyValue: intPtr(78)},
-	{ID: util.SaturatedFatId, MacroName: util.SaturatedFatString, Unit: "g", DailyValue: nil},
-	{ID: util.TransFatId, MacroName: util.TransFatString, Unit: "g", DailyValue: nil},
-	{ID: util.PolyunsaturatedFatId, MacroName: util.PolyunsaturatedFatString, Unit: "g", DailyValue: nil},
-	{ID: util.MonounsaturatedFatId, MacroName: util.MonounsaturatedFatString, Unit: "g", DailyValue: nil},
-	{ID: util.ProteinId, MacroName: util.ProteinString, Unit: "g", DailyValue: nil},
-	{ID: util.SugarId, MacroName: util.SugarString, Unit: "g", DailyValue: intPtr(50)},
-	{ID: util.SodiumId, MacroName: util.SodiumString, Unit: "mg", DailyValue: intPtr(2300)},
-	{ID: util.DietaryFiberId, MacroName: util.DietaryFiberString, Unit: "g", DailyValue: intPtr(28)},
-	{ID: util.CholesterolId, MacroName: util.CholesterolString, Unit: "mg", DailyValue: intPtr(300)},
-	{ID: util.PotassiumId, MacroName: util.PotassiumString, Unit: "mg", DailyValue: nil},
-	{ID: util.IronId, MacroName: util.IronString, Unit: "mg", DailyValue: nil},
-	{ID: util.CaffeineId, MacroName: util.CaffeineString, Unit: "mg", DailyValue: nil},
-	{ID: util.PhosphorusId, MacroName: util.PhosphorusString, Unit: "mg", DailyValue: nil},
-}
-
-func intPtr(i int) *int {
-	return &i
-}
-
-func MakeTotalNutritionData(foodList []NutritionixFoodItem) CustomFoodItem {
-	ret := CustomFoodItem{}
+func MakeTotalNutritionData(foodList []models.NutritionixFoodItem) models.CustomFoodItem {
+	ret := models.CustomFoodItem{}
 	fullNutrientMap := make(map[int64]float64)
 
 	for _, food := range foodList {
@@ -281,7 +245,7 @@ func MakeTotalNutritionData(foodList []NutritionixFoodItem) CustomFoodItem {
 	return ret
 }
 
-func makeNutrientMap(nutrientList []NutritionixNutrient) map[int64]float64 {
+func makeNutrientMap(nutrientList []models.NutritionixNutrient) map[int64]float64 {
 	nutrientMap := make(map[int64]float64)
 
 	for _, n := range nutrientList {
@@ -291,6 +255,27 @@ func makeNutrientMap(nutrientList []NutritionixNutrient) map[int64]float64 {
 	return nutrientMap
 }
 
-func GetNutrient(nutritionInfo CustomFoodItem, nutritionId int64) float64 {
+func GetNutrient(nutritionInfo models.CustomFoodItem, nutritionId int64) float64 {
 	return nutritionInfo.FullNutrientMap[nutritionId]
+}
+
+func buildNutritionixRequest(foodList string) (*http.Request, error) {
+	cfg := util.GetEnvConfig()
+	foodQuery := map[string]string{"query": foodList}
+	body, err := json.Marshal(foodQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	url := cfg.Nutritionix_domain + cfg.Nutritionix_naturalLanguage
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Content-Type", cfg.Nutritionix_contentType)
+	request.Header.Set("x-app-id", cfg.Nutritionix_appid)
+	request.Header.Set("x-app-key", cfg.Nutritionix_appkey)
+
+	return request, nil
 }

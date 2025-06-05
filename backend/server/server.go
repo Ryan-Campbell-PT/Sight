@@ -1,8 +1,7 @@
 package server
 
 import (
-	"github.com/Ryan-Campbell-PT/Sight/backend/nutrition"
-	"github.com/Ryan-Campbell-PT/Sight/backend/recipe"
+	"github.com/Ryan-Campbell-PT/Sight/backend/logic"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -32,11 +31,11 @@ func RunServer() {
 		AllowCredentials: true,
 	}))
 
-	router.POST("/postNaturalLanguageRequest", nutrition.GetNaturalLanguageJson)
+	router.POST("/postNaturalLanguageRequest", logic.GetNaturalLanguageJson)
 	// router.POST("/postSaveRecipe", post_saveRecipe)
 	// router.GET("/getActiveRecipes", get_activeRecipes)
 	// router.GET("/getInactiveRecipes", get_inactiveRecipes)
-	router.GET("/getUserRecipes", recipe.GetUserRecipesJson)
+	router.GET("/getUserRecipes", logic.GetUserRecipesJson)
 	// router.GET("/getInctiveRecipes", recipe.GetUserInactiveRecipesJson)
 
 	router.Run(":8080")

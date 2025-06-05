@@ -76,3 +76,7 @@ func SendHttpRequest(req *http.Request) ([]byte, error) {
 
 	return io.ReadAll(resp.Body)
 }
+
+func IntPtr(i int) *int {
+	return &i
+}

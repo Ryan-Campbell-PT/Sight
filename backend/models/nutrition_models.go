@@ -1,4 +1,4 @@
-package nutrition
+package models
 
 import (
 	"time"

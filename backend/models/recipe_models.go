@@ -1,12 +1,8 @@
-package recipe
-
-import (
-	"github.com/Ryan-Campbell-PT/Sight/backend/database"
-)
+package models
 
 // aligns with NutritionData.ts/GetUserRecipesResponseObject
 type GetUserRecipesResponseObject struct {
-	RecipeList []database.CustomRecipe `json:"recipeList"`
+	RecipeList []CustomRecipe `json:"recipeList"`
 }
 
 // aligns with RecipeRequestObject

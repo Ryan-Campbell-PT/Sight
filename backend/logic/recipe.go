@@ -15,6 +15,78 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
+var (
+	c                    *cache.Cache
+	userRecipeListString = "UsersRecipeList"
+)
+
+// Interface that matches both *sql.Row and *sql.Rows
+type scanner interface {
+	Scan(dest ...any) error
+}
+
+func initRecipeCache() {
+	c = cache.New(5*time.Minute, 10*time.Minute)
+	cacheAllRecipes()
+}
+
+func cacheAllRecipes() error {
+	functionName := "cacheAllRecipes/"
+	db := GetDatabase()
+	// TODO will need to add a clause for UserId when thats completed
+	rows, err := db.Query(`SELECT * FROM custom_recipe`)
+	if util.HandleError(functionName+"Error getting all recipes: ", err) {
+		return err
+	}
+	defer rows.Close()
+
+	recipeList, err := scanRecipeList(rows)
+	if util.HandleError(functionName+"Error scanning recipe rows: ", err) {
+		return err
+	}
+
+	// TODO dont think this works
+	c.Set(userRecipeListString, recipeList, cache.DefaultExpiration)
+	return nil
+}
+
+func scanRecipe(s scanner) (*models.CustomRecipe, error) {
+	functionName := "scanRecipeItem/"
+	var recipeObj models.CustomRecipe
+
+	err := s.Scan(
+		&recipeObj.Id,
+		&recipeObj.Name,
+		&recipeObj.AlternativeRecipeNames,
+		&recipeObj.FoodListString,
+		&recipeObj.ServingSize,
+		&recipeObj.Active,
+		&recipeObj.NutritionInfoId,
+		// &recipeObj.LastModified,
+	)
+
+	if util.HandleError(functionName+"Error scanning CustomRecipe: ", err) {
+		return nil, err
+	}
+
+	return &recipeObj, nil
+}
+
+func scanRecipeList(rows *sql.Rows) ([]models.CustomRecipe, error) {
+	functionName := "scanRecipeRows/"
+	var recipeList []models.CustomRecipe
+
+	for rows.Next() {
+		recipeObj, err := scanRecipe(rows)
+		if util.HandleError(functionName+"Error scanning recipe from scanner: ", err) {
+			return nil, err
+		}
+		recipeList = append(recipeList, *recipeObj)
+	}
+
+	return recipeList, nil
+}
+
 // TODO SaveNutritionInfo could be un-exported and strictly used as
 // a local function, so you always have to pass in the FoodItem
 // and never the nutritionId
@@ -64,7 +136,7 @@ func GetRecipes(active bool) ([]models.CustomRecipe, error) {
 	}
 	defer response.Close()
 
-	recipeList, err := createRecipeList(response)
+	recipeList, err := scanRecipeList(response)
 	if util.HandleError(functionName+"Error getting recipe list from db query: ", err) {
 		return nil, err
 	}
@@ -72,77 +144,27 @@ func GetRecipes(active bool) ([]models.CustomRecipe, error) {
 	return recipeList, nil
 }
 
+/*
 func createRecipeList(dbQuery *sql.Rows) ([]models.CustomRecipe, error) {
+	functionName := "createRecipeList/"
 	var recipeList []models.CustomRecipe
 	for dbQuery.Next() {
-		var recipe models.CustomRecipe
-		if err := dbQuery.Scan(&recipe.Id, &recipe.Name, &recipe.FoodListString, &recipe.ServingSize, &recipe.NutritionInfoId); err != nil {
+		// var recipe models.CustomRecipe
+		recipe, err := scanRecipe(dbQuery)
+		if util.HandleError(functionName, err) {
 			return nil, err
 		}
-		recipeList = append(recipeList, recipe)
+		recipeList = append(recipeList, *recipe)
 	}
 
 	return recipeList, nil
 }
+*/
 
-var (
-	c                    *cache.Cache
-	userRecipeListString = "UsersRecipeList"
-)
-
-// Interface that matches both *sql.Row and *sql.Rows
-type scanner interface {
-	Scan(dest ...any) error
-}
-
-func initCache() {
-	c = cache.New(5*time.Minute, 10*time.Minute)
-	cacheAllRecipes()
-}
-
-func scanRecipeItem(row *sql.Row) (*models.CustomRecipe, error) {
-	return scanRecipeFromScanner(row)
-}
-
-func scanRecipeFromScanner(s scanner) (*models.CustomRecipe, error) {
-	functionName := "scanRecipeItem/"
-	var recipeObj models.CustomRecipe
-
-	err := s.Scan(
-		&recipeObj.Id,
-		&recipeObj.Name,
-		&recipeObj.AlternativeRecipeNames,
-		&recipeObj.FoodListString,
-		&recipeObj.ServingSize,
-		&recipeObj.Active,
-		&recipeObj.NutritionInfoId,
-		// &recipeObj.LastModified,
-	)
-
-	if util.HandleError(functionName+"Error scanning CustomRecipe: ", err) {
-		return nil, err
-	}
-
-	return &recipeObj, nil
-}
-
-func scanRecipeRows(rows *sql.Rows) ([]models.CustomRecipe, error) {
-	functionName := "scanRecipeRows/"
-	var recipeList []models.CustomRecipe
-
-	for rows.Next() {
-		recipeObj, err := scanRecipeFromScanner(rows)
-		if util.HandleError(functionName+"Error scanning recipe from scanner: ", err) {
-			return nil, err
-		}
-		recipeList = append(recipeList, *recipeObj)
-	}
-
-	return recipeList, nil
-}
-
+// this function is no longer needed, but is a good reference for caching
+/*
 func getUsersRecipes(isActive bool) []models.CustomRecipe {
-	initCache()
+	initRecipeCache()
 	var retRecipeList []models.CustomRecipe
 	if cacheRecipeList, found := c.Get(userRecipeListString); found {
 		rList := cacheRecipeList.([]models.CustomRecipe)
@@ -157,39 +179,30 @@ func getUsersRecipes(isActive bool) []models.CustomRecipe {
 
 	return nil
 }
+*/
 
 func GetUsersInactiveRecipes() []models.CustomRecipe {
-	return getUsersRecipes(false)
+	functionName := "GetUsersActiveRecipes/"
+	ret, err := GetRecipes(false)
+	if util.HandleError(functionName, err) {
+		return nil
+	}
+	return ret
 }
 
 func GetUsersActiveRecipes() []models.CustomRecipe {
-	return getUsersRecipes(true)
+	functionName := "GetUsersActiveRecipes/"
+	ret, err := GetRecipes(true)
+	if util.HandleError(functionName, err) {
+		return nil
+	}
+	return ret
 }
 
 // returns the Id of the CustomRecipe if successful
 func IsActiveRecipeItem(foodString string) int {
 	// functionName := "IsActiveRecipeItem/"
 	return 0
-}
-
-func cacheAllRecipes() error {
-	functionName := "cacheAllRecipes/"
-	db := GetDatabase()
-	// TODO will need to add a clause for UserId when thats completed
-	rows, err := db.Query(`SELECT * FROM custom_recipe`)
-	if util.HandleError(functionName+"Error getting all recipes: ", err) {
-		return err
-	}
-	defer rows.Close()
-
-	recipeList, err := scanRecipeRows(rows)
-	if util.HandleError(functionName+"Error scanning recipe rows: ", err) {
-		return err
-	}
-
-	// TODO dont think this works
-	c.Set(userRecipeListString, recipeList, cache.DefaultExpiration)
-	return nil
 }
 
 // returns the Id of the CustomRecipe if successful
@@ -214,7 +227,7 @@ func IsRecipeItem(foodString string) int64 {
 		return -1
 	}
 
-	recipeItem, err := scanRecipeItem(sqlRow)
+	recipeItem, err := scanRecipe(sqlRow)
 	if util.HandleError(functionName+"Error scanning recipe item:", err) {
 		return -1
 	}
@@ -230,13 +243,13 @@ func GetRecipeItem(foodString string) *models.CustomRecipe {
 	db := GetDatabase()
 
 	recipeId := IsRecipeItem(foodString)
-	if recipeId == -1 {
+	if recipeId <= 0 {
 		return nil
 	}
 
 	sqlRow := db.QueryRow(`SELECT * FROM recipe WHERE id=@RecipeId`, sql.Named("RecipeId", recipeId))
 
-	recipeItem, err := scanRecipeItem(sqlRow)
+	recipeItem, err := scanRecipe(sqlRow)
 	if util.HandleError(functionName+"Error scanning recipe item: ", err) {
 		return nil
 	}
@@ -269,44 +282,6 @@ func parseCustomRecipe(foodString string) (*models.CustomRecipeParse, error) {
 	}
 
 	return &models.CustomRecipeParse{RecipeName: foodName, NumServings: servings, FoodString: trimmedFoodString}, nil
-}
-
-func saveRecipe(c *gin.Context) {
-	functionName := "saveRecipe/"
-	body, err := util.ReadRequestBody(c.Request.Body)
-	if util.HandleError(functionName+"Error reading recipe request body: ", err) {
-		return
-	}
-
-	var recipeObj models.SaveRecipeRequestBody
-	err = json.Unmarshal(body, &recipeObj)
-	if util.HandleError(functionName+"Error reading body from recipe request: ", err) {
-		return
-	}
-
-	// get the nutrition information from the food string
-	nutritionInfo := GetNaturalLanguageResponse(recipeObj.FoodListString)
-	// nutritionInfo, err := nutrition.GetNutritionInfoResponse(recipeObj.FoodListString)
-	// if util.HandleError(functionName+"Error getting total nutrition info from food string: ", err) {
-	// 	return
-	// }
-
-	nutritionId, err := SaveNutritionInfo(nutritionInfo.TotalNutritionInformation)
-	if util.HandleError(functionName+"Error saving nutrition information to database: ", err) {
-		return
-	}
-
-	var recipe models.CustomRecipe
-	recipe.Active = true
-	recipe.FoodListString = recipeObj.FoodListString
-	recipe.Name = recipeObj.RecipeName
-	recipe.ServingSize = recipeObj.NumServings
-	err = SaveRecipe(recipe, nutritionId)
-	if util.HandleError(functionName+"Error saving recipe: ", err) {
-		return
-	}
-
-	c.JSON(http.StatusOK, "")
 }
 
 func GetUserRecipesJson(c *gin.Context) {

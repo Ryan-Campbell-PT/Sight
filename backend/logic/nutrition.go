@@ -43,6 +43,7 @@ func SaveNutritionInfo(nutritionInfo models.CustomFoodItem) (int64, error) {
 		sql.Named("MonoFat", GetNutrient(nutritionInfo, util.MonounsaturatedFatId)),
 		sql.Named("Potassium", GetNutrient(nutritionInfo, util.PotassiumId)),
 	)
+
 	var nutritionKey int64
 	err := row.Scan(&nutritionKey)
 	if util.HandleError("Error getting nutritionKey from Recipe Response", err) {

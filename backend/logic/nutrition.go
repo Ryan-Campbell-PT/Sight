@@ -56,8 +56,8 @@ func SaveNutritionInfo(nutritionInfo models.CustomFoodItem) (int64, error) {
 // this function will take the list of foods provided by a user
 // and handle all the work associated with that string:
 // reaching out to api, marshaling/unmarshaling, building response object
-func fetchNaturalLanguageResponse(foodListString string) (*models.NutritionixAPINaturalLanguageResponse, error) {
-	functionName := "handle_naturalLanguage_foodList/"
+func fetchNutritionixNaturalLanguageResponse(foodListString string) (*models.NutritionixAPINaturalLanguageResponse, error) {
+	functionName := "fetchNutritionixNaturalLanguageResponse/"
 	var nutritionInfo models.NutritionixAPINaturalLanguageResponse
 
 	request, err := buildNutritionixRequest(foodListString)
@@ -122,25 +122,52 @@ func CheckFoodArrayForErrors(foodListString string, foods []models.CustomFoodIte
 	return errorList
 }
 
-// this function will take a food string
-// handle contacting the api
+// this function will take the users input (the list of foods/recipes requested to analyse)
+// parse the string into a workable object
+// get any recipes the user typed
+// contact the Nutritionix api
+// check any errors
 // and return a response object of the information
-// in most cases, this will be the most commonly called function
-func GetNaturalLanguageResponse(foodString string) *models.NaturalLanguageResponse {
-	functionName := "GetNutritionInfoResponse/"
+func GetNaturalLanguageResponse(userInput string) *models.NaturalLanguageResponse {
+	functionName := "GetNaturalLanguageResponse/"
+	parsedUserInput := ParseUserInput(userInput)
+
+	recipeList := CheckUserInputForRecipes(parsedUserInput)
+
+	// need to remove recipe strings from string passed to nutritionix
+	// cause some recipes may have similar names to something nutritionix recognizes
+	// and lead to duplicates or bad data
+	userInputMinusRecipe := removeRecipesFromUserInput(parsedUserInput)
 
 	// pass in the foodListString, get back the information from the api
-	naturalLanguageResponseObject, err := fetchNaturalLanguageResponse(foodString)
+	naturalLanguageResponseObject, err := fetchNutritionixNaturalLanguageResponse(userInputMinusRecipe)
 	if util.HandleError(functionName+"Error fetching natural language response: ", err) {
 		return nil
 	}
 
-	ding := models.NaturalLanguageResponse{
-		Foods:                     makeCustomFoodItemArray(naturalLanguageResponseObject.Foods),
+	customFoodArray := makeCustomFoodItemArray(naturalLanguageResponseObject.Foods)
+
+	ret := models.NaturalLanguageResponse{
+		Foods:                     customFoodArray,
+		Recipes:                   recipeList,
 		TotalNutritionInformation: MakeTotalNutritionData(naturalLanguageResponseObject.Foods),
-		Errors:                    CheckFoodArrayForErrors(foodString, makeCustomFoodItemArray(naturalLanguageResponseObject.Foods)),
+		Errors:                    CheckFoodArrayForErrors(userInput, customFoodArray),
 	}
-	return &ding
+	return &ret
+}
+
+func ParseUserInput(userInput string) []models.ParsedUserInput {
+	trimmedFoodString := strings.Split(strings.TrimSpace(userInput), ",")
+	ret := make([]models.ParsedUserInput, len(trimmedFoodString))
+
+	for i, str := range trimmedFoodString {
+		ret[i] = models.ParsedUserInput{
+			Index:      int64(i),
+			FoodString: strings.TrimSpace(str),
+		}
+	}
+
+	return ret
 }
 
 func makeCustomFoodItemArray(foodItemArray []models.NutritionixFoodItem) []models.CustomFoodItem {
@@ -213,6 +240,31 @@ func GetNaturalLanguageJson(c *gin.Context) {
 	c.JSON(http.StatusOK, string(responseMarshal))
 }
 
+// TODO due to Recipes and Foods having to be combined now to make total nutrition info
+// this function will have to be rethought
+// recipes will probably have to have a custom function that takes all their nutrition info
+// and turned into a map for this to work
+// and foodItems will have to be modified to be included in the function as well
+// meaning the object type database_models.go/NutritionData will probably have to be used to solve this
+// which means Recipe will need to have access to a map of that
+// and a food item will need their function modified to create one out of its data
+/*
+func MakeTotalNutritionData(foodList []models.CustomFoodItem, recipeList []models.CustomRecipe) models.CustomFoodItem {
+		ret := models.CustomFoodItem{}
+	retMap := make(map[int64]float64)
+
+	for _, food := range foodList {
+		for key, value := range food.FullNutrientMap {
+					retMap[key] = util.RoundToNearestDecimal(ret.FullNutrientMap[key]+value, 2)
+		}
+	}
+	ret.FullNutrientMap = retMap
+
+	return ret
+
+}
+*/
+//*
 func MakeTotalNutritionData(foodList []models.NutritionixFoodItem) models.CustomFoodItem {
 	ret := models.CustomFoodItem{}
 	fullNutrientMap := make(map[int64]float64)
@@ -245,6 +297,8 @@ func MakeTotalNutritionData(foodList []models.NutritionixFoodItem) models.Custom
 
 	return ret
 }
+
+//*/
 
 func makeNutrientMap(nutrientList []models.NutritionixNutrient) map[int64]float64 {
 	nutrientMap := make(map[int64]float64)

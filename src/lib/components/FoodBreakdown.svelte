@@ -34,7 +34,7 @@
                 MacroNutrientIds.TotalCarbohydrate,
                 item.full_nutrient_map,
             ),
-            0,
+            1,
         )}
     </td>
     <td>
@@ -43,7 +43,7 @@
                 MacroNutrientIds.Protein,
                 item.full_nutrient_map,
             ),
-            0,
+            1,
         )}
     </td>
     <td>
@@ -52,7 +52,7 @@
                 MacroNutrientIds.Sodium,
                 item.full_nutrient_map,
             ),
-            0,
+            1,
         )}
     </td>
     <td>
@@ -61,7 +61,7 @@
                 MacroNutrientIds.Sugar,
                 item.full_nutrient_map,
             ),
-            0,
+            1,
         )}
     </td>
     <td>
@@ -70,7 +70,7 @@
                 MacroNutrientIds.TotalFat,
                 item.full_nutrient_map,
             ),
-            0,
+            1,
         )}
     </td>
 </tr>

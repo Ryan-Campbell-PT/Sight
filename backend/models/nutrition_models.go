@@ -17,6 +17,16 @@ type CustomFoodItem struct {
 	Photo           NutritionixPhoto  `json:"photo"`
 }
 
+// this is the text written by the user (typically userInput)
+// parsed into a object to work with across program
+type ParsedUserInput struct {
+	// the original index of where this text took place in the usersInput
+	Index int64 `json:"index"`
+	// the original foodString
+	FoodString string `json:"foodString"`
+	IsRecipe   bool   `json:"isRecipe"`
+}
+
 type DailyNutrition struct {
 	// AllInformation  Nutritionix_NaturalLanguageResponse
 	NutritionValues CustomFoodItem
@@ -46,6 +56,7 @@ type GetNutritionRequestBody struct {
 // aligns with NaturalLanguageResponseObject in NutritionData.ts
 type NaturalLanguageResponse struct {
 	Foods                     []CustomFoodItem       `json:"foods"`
+	Recipes                   []CustomRecipe         `json:"recipes"`
 	TotalNutritionInformation CustomFoodItem         `json:"total_nutrition_information"`
 	Errors                    []NutritionErrorObject `json:"errors"`
 }

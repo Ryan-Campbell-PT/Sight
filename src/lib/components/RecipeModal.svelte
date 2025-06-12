@@ -1,11 +1,20 @@
 <script lang="ts">
     import type { CustomRecipe } from "$lib/NutritionData";
-    import { Modal } from "@sveltestrap/sveltestrap";
+    import { Modal, Input, Label } from "@sveltestrap/sveltestrap";
+    import RecipeDisplay from "./RecipeDisplay.svelte";
 
-    let { recipe, isVisible }: { recipe: CustomRecipe; isVisible: boolean } =
-        $props();
+    let {
+        recipe,
+        isVisible = $bindable(),
+        isEdit,
+    }: { recipe: CustomRecipe; isVisible: boolean; isEdit: boolean } = $props();
 
-    let recipeEdit: CustomRecipe = recipe;
+    let recipeEdit: CustomRecipe = $state(recipe);
+
+    let closeModal = () => {
+        isVisible = false;
+        recipeEdit = {} as CustomRecipe;
+    };
 
     $effect(() => {
         console.log(recipeEdit.food_string);
@@ -22,23 +31,54 @@
  -->
 <Modal id="testModal" bind:isOpen={isVisible}>
     <div class="modal-header">
-        <h5 class="modal-title">{recipeEdit.recipe_name}</h5>
+        {#if isEdit}
+            <Input
+                type="text"
+                placeholder="Recipe Name"
+                bind:value={recipeEdit.recipe_name}
+            />
+        {:else}
+            <h5 class="modal-title">{recipeEdit.recipe_name}</h5>
+        {/if}
         <button
             type="button"
             class="btn-close"
             aria-label="Close"
-            onclick={() => (isVisible = false)}
+            onclick={closeModal}
         >
         </button>
     </div>
     <div class="modal-body">
-        <h5>Food List</h5>
-        <div>
-            {recipeEdit.food_string}
+        <h5>List of Foods</h5>
+        <div class="my-2">
+            {#if isEdit}
+                <Input
+                    type="textarea"
+                    placeholder="List of Foods"
+                    bind:value={recipeEdit.food_string}
+                />
+            {:else}
+                {recipeEdit.food_string}
+            {/if}
+        </div>
+        <div class="my-2">
+            <div class="col-6">
+                <Label for="servings">
+                    Number of servings
+                    <Input
+                        type="number"
+                        placeholder="Number of Servings"
+                        min="1"
+                        defaultValue="1"
+                        bind:value={recipeEdit.serving_size}
+                    />
+                </Label>
+            </div>
+            <div class="col-6"></div>
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+        <button type="button" class="btn btn-secondary" onclick={closeModal}
             >Close</button
         >
         <button type="button" class="btn btn-primary">Save changes</button>

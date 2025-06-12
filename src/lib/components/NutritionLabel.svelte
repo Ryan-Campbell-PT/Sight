@@ -23,7 +23,7 @@
     };
 
     const createNutritionRow = (name: string, isIndented: boolean): string => {
-        if (!totalNutritionInfo || !totalNutritionInfo.full_nutrients)
+        if (!totalNutritionInfo || !totalNutritionInfo.full_nutrient_map)
             return "";
         const macroInfo = NutritionLabelContent.find(
             (m) => m.macro_name == name,

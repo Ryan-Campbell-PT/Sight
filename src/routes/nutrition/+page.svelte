@@ -3,17 +3,18 @@
     import type {
         CustomRecipe,
         NaturalLanguageResponseObject,
-        RecipeResponseObject,
         FoodItem,
     } from "../../lib/NutritionData";
     import NutritionDisplay from "$lib/components/NutritionDisplay.svelte";
     import NaturalLanguageTextBox from "$lib/components/NaturalLanguageTextBox.svelte";
     import Loading from "$lib/components/LoadingModal.svelte";
     import AlertBox from "$lib/components/AlertBox.svelte";
+    import RecipeModal from "$lib/components/RecipeModal.svelte";
 
     let isLoading = $state(false);
     let nutritionDisplayIsVisible = $state(false);
     let displayError = $state(false);
+    let newRecipeIsVisible = $state(false);
 
     // let nutritionResponse = $state({
     //     nutritionResponseObject: NutritionResponseObject,
@@ -66,6 +67,19 @@
                     setNutritionDisplayVisible(true);
                 }}
             />
+
+            <Button onclick={() => (newRecipeIsVisible = true)}>
+                Create New Recipe
+            </Button>
+            <RecipeModal
+                recipe={{
+                    food_string: "ding, dong",
+                    recipe_name: "Diddle",
+                    serving_size: 2,
+                } as CustomRecipe}
+                bind:isVisible={newRecipeIsVisible}
+                isEdit={false}
+            />
         </div>
         <div id="second-column-half" class="col-md-6 container">
             <NutritionDisplay
@@ -73,26 +87,6 @@
                 nutritionLabelIsVisible={nutritionDisplayIsVisible}
                 nutritionBreakdownIsVisible={showNutritionBreakdown}
             />
-
-            <!--
-            {#if nutritionResponse.display}
-                <Label for="displayNutritionBreakdown">
-                    Display Nutrition Breakdown?
-                    <Input
-                        id="displayNutritionBreakdown"
-                        type="checkbox"
-                        bind:checked={nutritionInfoIsVisible}
-                    />
-                </Label>
-                {#if nutritionInfoIsVisible}
-                    <NutritionDisplay
-                        nutritionResponse={nutritionResponse.nutritionResponseObject}
-                        nutritionLabelIsVisible={nutritionInfoIsVisible}
-                        nutritionBreakdownIsVisible={showNutritionBreakdown}
-                    />
-                {/if}
-            {/if}
-            -->
         </div>
     </div>
 </div>

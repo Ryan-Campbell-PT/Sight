@@ -2,8 +2,15 @@
 <script lang="ts">
     import NutritionLabel from "./NutritionLabel.svelte";
     import type { NaturalLanguageResponseObject } from "$lib/NutritionData";
+    import {
+        NutritionLabelContent,
+        MacroNutrientStrings,
+    } from "$lib/NutritionData";
     import FoodBreakdown from "./FoodBreakdown.svelte";
     import ErrorBreakdown from "./ErrorBreakdown.svelte";
+    import { Accordion } from "@sveltestrap/sveltestrap";
+    import Page from "../../routes/+page.svelte";
+    import { render } from "svelte/server";
 
     let {
         nutritionResponse,
@@ -18,13 +25,24 @@
     let columns = [
         "Image",
         "Food",
-        "Calories",
-        "Carbs",
-        "Protein",
-        "Sodium",
-        "Sugar",
-        "Fat",
+        MacroNutrientStrings.Calorie,
+        MacroNutrientStrings.TotalCarbohydrate,
+        MacroNutrientStrings.Protein,
+        MacroNutrientStrings.Sodium,
+        MacroNutrientStrings.Sugar,
+        MacroNutrientStrings.TotalFat,
     ];
+    let getMacroUnit = (macro: string): string => {
+        const ret = NutritionLabelContent.find((m) => m.macro_name === macro);
+        if (!ret) return "";
+        return ret.unit;
+    };
+
+    const columnTitle = (col: string): string => {
+        const macroUnit = getMacroUnit(col);
+        const macroUnitString = macroUnit ? ` (${macroUnit})` : "";
+        return `<th scope="col">${col}${macroUnitString}</th>`;
+    };
 </script>
 
 <div>
@@ -41,7 +59,7 @@
             <thead>
                 <tr>
                     {#each columns as col}
-                        <th scope="col">{col}</th>
+                        {@html columnTitle(col)}
                     {/each}
                 </tr>
             </thead>

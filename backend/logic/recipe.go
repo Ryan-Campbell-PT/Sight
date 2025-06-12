@@ -257,7 +257,22 @@ func GetRecipeItem(foodString string) *models.CustomRecipe {
 	return recipeItem
 }
 
-// take a the food list string provided by the user
+/*
+// this function will take the entire foodListString
+// and return any recipes in the string
+func CheckForRecipes(foodListString string) ([]models.CustomRecipe, error) {
+	splitFoodString := strings.Split(strings.ToLower(foodListString), ",")
+
+	for i, str := range splitFoodString {
+		if IsRecipeItem(str) > 0 {
+
+
+		}
+	}
+}
+
+*/
+// take a the individual food string provided by the user
 // and turn it into an object representing the important info
 func parseCustomRecipe(foodString string) (*models.CustomRecipeParse, error) {
 	trimmedFoodString := strings.ToLower(strings.TrimSpace(foodString))
@@ -299,4 +314,101 @@ func GetUserRecipesJson(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, string(recipeJson))
+}
+
+// check the users input for any recipes
+// and remove from the original userInputArray and recipes caught
+// necessary cause some recipes may match names the api reads like "breakfast wrap"
+// may be a recipe, but also something nutritionix understands
+func CheckUserInputForRecipes(userInputArray []models.ParsedUserInput) []models.CustomRecipe {
+	functionName := "CheckUserInputForRecipes/"
+	var ret []models.CustomRecipe
+
+	// ignore error cause we only want the object, an error will just not be added into array
+	for i, input := range userInputArray {
+		parsedRecipe := parseRecipeItem(input.FoodString)
+		if parsedRecipe == nil {
+			continue
+		}
+
+		recipeItem, err := GetRecipeItemFromString(parsedRecipe.RecipeName)
+		if recipeItem == nil || util.HandleError(functionName, err) {
+			continue
+		}
+		// arrays in golang are essentially pointers to all the content
+		// so modifing the array is easy
+		userInputArray[i].IsRecipe = true
+		ret = append(ret, *recipeItem)
+	}
+	return ret
+}
+
+// space
+// space
+// space
+// space
+// space
+// space
+// space
+
+// alt recipeNames can be empty (golang doesnt allow default values)
+func GetRecipeItemFromString(recipeName string) (*models.CustomRecipe, error) {
+	functionName := "GetRecipeItemFromString/"
+	// TODO this will have to implement caching at some point
+	db := GetDatabase()
+
+	sqlRow := db.QueryRow(`
+		SELECT * FROM custom_recipe
+		WHERE (recipe_name LIKE ? OR alt_recipe_names LIKE ?)
+		AND active = 1
+	`, "%"+recipeName+"%", "%"+recipeName+"%")
+
+	recipe, err := scanRecipe(sqlRow)
+	if util.HandleError(functionName, err) {
+		return nil, err
+	}
+
+	return recipe, nil
+}
+
+// TODO
+func GetRecipeItemFromId(recipeId int64) (*models.CustomRecipe, error) {
+	return nil, nil
+}
+
+// take a the individual food string provided by the user, as a ParsedUserInput array
+// and turn it into an object representing the important info
+func parseRecipeItem(foodString string) *models.CustomRecipeParse {
+	// string: 1.5 servings of moms chocolate cake
+	// Match pattern: number + "servings of" OR "serving of" + the rest
+	re := regexp.MustCompile(`(?i)^\s*([\d.]+)\s+servings?\s+of\s+(.+)$`)
+
+	trimmedString := strings.TrimSpace(foodString)
+	matches := re.FindStringSubmatch(trimmedString)
+	if len(matches) != 3 {
+		// return 0, "", fmt.Errorf("input did not match expected format")
+		return nil
+	}
+
+	servingsStr := matches[1]
+	foodName := strings.TrimSpace(matches[2])
+	servings, err := strconv.ParseFloat(servingsStr, 64)
+	if err != nil {
+		// return 0, "", fmt.Errorf("invalid serving number: %v", err)
+		return nil
+	}
+
+	return &models.CustomRecipeParse{RecipeName: foodName, NumServings: servings, FoodString: trimmedString}
+}
+
+func removeRecipesFromUserInput(parsedUserInput []models.ParsedUserInput) string {
+	ret := ""
+	for _, input := range parsedUserInput {
+		if input.IsRecipe {
+			continue
+		}
+		ret += input.FoodString + ", "
+	}
+
+	return strings.Trim(ret, ", ")
 }

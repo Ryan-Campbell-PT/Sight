@@ -14,14 +14,6 @@ make modifications to recipes -->
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
     import { onMount } from "svelte";
 
-    // aligns with PostRecipe_RequestBody
-    class PostRecipeRequestObject {
-        recipeName: string = "";
-        alternativeRecipeNames: string[] = [];
-        foodListString: string = "";
-        numServings: number = 1;
-    }
-
     var isLoading = $state(false);
     var recipeName = $state("");
     var altNames = $state([]);
@@ -48,7 +40,7 @@ make modifications to recipes -->
         getAllRecipes();
         resetPage();
     };
-
+    /*
     let saveRecipe = async () => {
         const body: PostRecipeRequestObject = {
             recipeName: recipeName,
@@ -77,6 +69,7 @@ make modifications to recipes -->
             console.log(error);
         }
     };
+*/
 
     let getAllRecipes = async () => {
         try {
@@ -105,7 +98,7 @@ make modifications to recipes -->
         // probs want a boolean parameter
     };
 
-    onMount(() => {
+    $effect(() => {
         refreshRecipeList();
     });
 

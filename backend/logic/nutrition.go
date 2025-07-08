@@ -2,7 +2,6 @@ package logic
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -18,36 +17,67 @@ import (
 func SaveNutritionInfo(nutritionInfo models.CustomFoodItem) (int64, error) {
 	db := GetDatabase()
 
-	// SELECT at the bottom grabs the id of the row that was just created
-	row := db.QueryRow(`
+	// old code from mssql
+	/*
+		// SELECT at the bottom grabs the id of the row that was just created
+		row := db.QueryRow(`
+			INSERT INTO nutrition_info (
+				calories, protein, carbs, fiber, cholesterol, sugar,
+				phosphorus, sodium, total_fat, saturated_fat, poly_fat, mono_fat, potassium
+			) VALUES (
+				@Calories, @Protein, @Carbs, @Fiber, @Cholesterol, @Sugar,
+				@Phosphorus, @Sodium, @TotalFat, @SaturatedFat, @PolyFat, @MonoFat, @Potassium
+			);
+			SELECT ID = CONVERT(BIGINT, SCOPE_IDENTITY());
+		`,
+			sql.Named("Calories", GetNutrient(nutritionInfo, util.CaloriesId)),
+			sql.Named("Protein", GetNutrient(nutritionInfo, util.ProteinId)),
+			sql.Named("Carbs", GetNutrient(nutritionInfo, util.TotalCarbohydrateId)),
+			sql.Named("Fiber", GetNutrient(nutritionInfo, util.DietaryFiberId)),
+			sql.Named("Cholesterol", GetNutrient(nutritionInfo, util.CholesterolId)),
+			sql.Named("Sugar", GetNutrient(nutritionInfo, util.SugarId)),
+			sql.Named("Phosphorus", GetNutrient(nutritionInfo, util.PhosphorusId)),
+			sql.Named("Sodium", GetNutrient(nutritionInfo, util.SodiumId)),
+			sql.Named("TotalFat", GetNutrient(nutritionInfo, util.TotalFatId)),
+			sql.Named("SaturatedFat", GetNutrient(nutritionInfo, util.SaturatedFatId)),
+			sql.Named("PolyFat", GetNutrient(nutritionInfo, util.PolyunsaturatedFatId)),
+			sql.Named("MonoFat", GetNutrient(nutritionInfo, util.MonounsaturatedFatId)),
+			sql.Named("Potassium", GetNutrient(nutritionInfo, util.PotassiumId)),
+		)
+
+		var nutritionKey int64
+		err := row.Scan(&nutritionKey)
+		if util.HandleError("Error getting nutritionKey from Recipe Response", err) {
+			return -1, err
+		}
+	*/
+	res, err := db.Exec(`
 		INSERT INTO nutrition_info (
 			calories, protein, carbs, fiber, cholesterol, sugar,
 			phosphorus, sodium, total_fat, saturated_fat, poly_fat, mono_fat, potassium
-		) VALUES (
-			@Calories, @Protein, @Carbs, @Fiber, @Cholesterol, @Sugar,
-			@Phosphorus, @Sodium, @TotalFat, @SaturatedFat, @PolyFat, @MonoFat, @Potassium
-		);
-		SELECT ID = CONVERT(BIGINT, SCOPE_IDENTITY());
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
-		sql.Named("Calories", GetNutrient(nutritionInfo, util.CaloriesId)),
-		sql.Named("Protein", GetNutrient(nutritionInfo, util.ProteinId)),
-		sql.Named("Carbs", GetNutrient(nutritionInfo, util.TotalCarbohydrateId)),
-		sql.Named("Fiber", GetNutrient(nutritionInfo, util.DietaryFiberId)),
-		sql.Named("Cholesterol", GetNutrient(nutritionInfo, util.CholesterolId)),
-		sql.Named("Sugar", GetNutrient(nutritionInfo, util.SugarId)),
-		sql.Named("Phosphorus", GetNutrient(nutritionInfo, util.PhosphorusId)),
-		sql.Named("Sodium", GetNutrient(nutritionInfo, util.SodiumId)),
-		sql.Named("TotalFat", GetNutrient(nutritionInfo, util.TotalFatId)),
-		sql.Named("SaturatedFat", GetNutrient(nutritionInfo, util.SaturatedFatId)),
-		sql.Named("PolyFat", GetNutrient(nutritionInfo, util.PolyunsaturatedFatId)),
-		sql.Named("MonoFat", GetNutrient(nutritionInfo, util.MonounsaturatedFatId)),
-		sql.Named("Potassium", GetNutrient(nutritionInfo, util.PotassiumId)),
+		GetNutrient(nutritionInfo, util.CaloriesId),
+		GetNutrient(nutritionInfo, util.ProteinId),
+		GetNutrient(nutritionInfo, util.TotalCarbohydrateId),
+		GetNutrient(nutritionInfo, util.DietaryFiberId),
+		GetNutrient(nutritionInfo, util.CholesterolId),
+		GetNutrient(nutritionInfo, util.SugarId),
+		GetNutrient(nutritionInfo, util.PhosphorusId),
+		GetNutrient(nutritionInfo, util.SodiumId),
+		GetNutrient(nutritionInfo, util.TotalFatId),
+		GetNutrient(nutritionInfo, util.SaturatedFatId),
+		GetNutrient(nutritionInfo, util.PolyunsaturatedFatId),
+		GetNutrient(nutritionInfo, util.MonounsaturatedFatId),
+		GetNutrient(nutritionInfo, util.PotassiumId),
 	)
+	if err != nil {
+		// handle error
+	}
 
-	var nutritionKey int64
-	err := row.Scan(&nutritionKey)
-	if util.HandleError("Error getting nutritionKey from Recipe Response", err) {
-		return -1, err
+	nutritionKey, err := res.LastInsertId()
+	if err != nil {
+		// handle error
 	}
 
 	return nutritionKey, nil
@@ -196,6 +226,7 @@ func GetNaturalLanguageJson(c *gin.Context) {
 	// read the request body
 	bodyJson, err := util.ReadRequestBody(c.Request.Body)
 	if util.HandleError(functionName+"Error reading query request body: ", err) {
+		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -203,6 +234,7 @@ func GetNaturalLanguageJson(c *gin.Context) {
 	var bodyObj models.GetNutritionRequestBody
 	err = json.Unmarshal(bodyJson, &bodyObj)
 	if util.HandleError(functionName+"Error reading body from query request: ", err) {
+		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -234,6 +266,7 @@ func GetNaturalLanguageJson(c *gin.Context) {
 	// create return object
 	responseMarshal, err := json.Marshal(ret)
 	if util.HandleError(functionName+"Error marshalling NaturalLanguageResponse", err) {
+		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 

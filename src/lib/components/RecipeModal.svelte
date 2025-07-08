@@ -3,21 +3,79 @@
     import { Modal, Input, Label } from "@sveltestrap/sveltestrap";
     import RecipeDisplay from "./RecipeDisplay.svelte";
 
-    let {
-        recipe,
-        isVisible = $bindable(),
-        isEdit,
-    }: { recipe: CustomRecipe; isVisible: boolean; isEdit: boolean } = $props();
+    // aligns with SaveRecipeRequestBody
+    interface SaveRecipeRequestObject {
+        /*
+        recipeName: string;
+        alternativeRecipeNames: string[];
+        foodListString: string;
+        numServings: number;
+        */
+        recipe: CustomRecipe;
+        isMacroInfo: boolean;
+    }
 
-    let recipeEdit: CustomRecipe = $state(recipe);
+    let {
+        recipeProp,
+        isVisible = $bindable(),
+    }: { recipeProp: CustomRecipe; isVisible: boolean } = $props();
+
+    let isMacroInfo = $state(false);
 
     let closeModal = () => {
         isVisible = false;
-        recipeEdit = {} as CustomRecipe;
     };
 
+    // function to check if the passed in recipe is real/populated, or a new recipe (empty)
+    let isEmptyRecipe = () => {
+        return !(
+            recipeProp &&
+            recipeProp.food_string &&
+            recipeProp.food_string.length > 0 &&
+            recipeProp.recipe_name &&
+            recipeProp.recipe_name.length > 0 &&
+            recipeProp.serving_size
+        );
+    };
+
+    let saveRecipe = async () => {
+        const body: SaveRecipeRequestObject = {
+            /*
+            alternativeRecipeNames: [],
+            foodListString: recipeProp.food_string,
+            numServings: recipeProp.serving_size,
+            recipeName: recipeProp.recipe_name,
+            */
+            recipe: recipeProp,
+            isMacroInfo: isMacroInfo,
+        };
+        const res = await fetch("http://localhost:8080/saveRecipe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+
+        if (!res) {
+            // TODO display error
+        } else {
+            // TODO display success
+            console.log("successful saving of recipe: ");
+            closeModal();
+            // TODO refresh recipe list
+        }
+    };
+
+    // on state change (modal open) check if its an empty recipe. If so, create something to work with
     $effect(() => {
-        console.log(recipeEdit.food_string);
+        if (isEmptyRecipe()) {
+            recipeProp = {
+                active: true,
+                food_string: "",
+                recipe_name: "New Recipe",
+                serving_size: 1,
+            } as CustomRecipe;
+        }
+        // console.log(recipeEdit.food_string);
     });
 </script>
 
@@ -29,17 +87,15 @@
     there should be a 'close' 'save' and a 'test' button to check that will run the food string against the api
     so you can confirm the food string matches what youd expect from it 
  -->
-<Modal id="testModal" bind:isOpen={isVisible}>
+<Modal bind:isOpen={isVisible}>
     <div class="modal-header">
-        {#if isEdit}
+        <h5 class="modal-title">
             <Input
                 type="text"
                 placeholder="Recipe Name"
-                bind:value={recipeEdit.recipe_name}
+                bind:value={recipeProp.recipe_name}
             />
-        {:else}
-            <h5 class="modal-title">{recipeEdit.recipe_name}</h5>
-        {/if}
+        </h5>
         <button
             type="button"
             class="btn-close"
@@ -49,16 +105,27 @@
         </button>
     </div>
     <div class="modal-body">
-        <h5>List of Foods</h5>
-        <div class="my-2">
-            {#if isEdit}
-                <Input
-                    type="textarea"
-                    placeholder="List of Foods"
-                    bind:value={recipeEdit.food_string}
-                />
+        <div>
+            <Input
+                type={"checkbox"}
+                bind:value={isMacroInfo}
+                label="Manually input macro nutrients, instead of list of foods"
+                onclick={() => (isMacroInfo = !isMacroInfo)}
+            />
+        </div>
+        <div>
+            {#if !isMacroInfo}
+                <h5>List of Foods</h5>
+                <div class="my-2">
+                    <Input
+                        type="textarea"
+                        placeholder="List of Foods"
+                        bind:value={recipeProp.food_string}
+                    />
+                </div>
             {:else}
-                {recipeEdit.food_string}
+                <h5>List of Macros</h5>
+                <div class="my-2"></div>
             {/if}
         </div>
         <div class="my-2">
@@ -70,7 +137,7 @@
                         placeholder="Number of Servings"
                         min="1"
                         defaultValue="1"
-                        bind:value={recipeEdit.serving_size}
+                        bind:value={recipeProp.serving_size}
                     />
                 </Label>
             </div>
@@ -81,6 +148,8 @@
         <button type="button" class="btn btn-secondary" onclick={closeModal}
             >Close</button
         >
-        <button type="button" class="btn btn-primary">Save changes</button>
+        <button type="button" class="btn btn-primary" onclick={saveRecipe}
+            >Save changes</button
+        >
     </div>
 </Modal>

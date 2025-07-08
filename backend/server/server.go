@@ -32,6 +32,7 @@ func RunServer() {
 	}))
 
 	router.POST("/postNaturalLanguageRequest", logic.GetNaturalLanguageJson)
+	router.POST("/saveRecipe", logic.SaveRecipeJson)
 	// router.POST("/postSaveRecipe", post_saveRecipe)
 	// router.GET("/getActiveRecipes", get_activeRecipes)
 	// router.GET("/getInactiveRecipes", get_inactiveRecipes)

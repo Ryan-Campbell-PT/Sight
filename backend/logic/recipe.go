@@ -94,15 +94,30 @@ func SaveRecipe(recipe models.CustomRecipe, nutritionId int64) error {
 	functionName := "saveToDatabase_Recipe/"
 	db := GetDatabase()
 
-	_, err := db.Exec(`INSERT INTO recipe(recipe_name, food_string, serving_size, active, nutrition_id)
-			VALUES (@RecipeName, @FoodString, @ServingSize, @Active, @NutritionId)`,
-		sql.Named("RecipeName", recipe.Name),
-		sql.Named("FoodString", recipe.FoodListString),
-		sql.Named("ServingSize", recipe.ServingSize),
-		sql.Named("Active", true),
-		sql.Named("NutritionId", nutritionId),
+	_, err := db.Exec(`
+		INSERT INTO custom_recipe (recipe_name, food_string, serving_size, active, nutrition_id)
+		VALUES (?, ?, ?, ?, ?)`,
+		recipe.Name,
+		recipe.FoodListString,
+		recipe.ServingSize,
+		true,
+		nutritionId,
 	)
+	if util.HandleError(functionName, err) {
+		return err
+	}
 
+	// old mssql command
+	/*
+		_, err := db.Exec(`INSERT INTO recipe(recipe_name, food_string, serving_size, active, nutrition_id)
+				VALUES (@RecipeName, @FoodString, @ServingSize, @Active, @NutritionId)`,
+			sql.Named("RecipeName", recipe.Name),
+			sql.Named("FoodString", recipe.FoodListString),
+			sql.Named("ServingSize", recipe.ServingSize),
+			sql.Named("Active", true),
+			sql.Named("NutritionId", nutritionId),
+		)
+	*/
 	if util.HandleError(functionName+"Error saving recipe information to db: ", err) {
 		return err
 	}
@@ -129,7 +144,8 @@ func GetRecipes(active bool) ([]models.CustomRecipe, error) {
 	functionName := "getFromDatabase_Recipes/"
 	db := GetDatabase()
 
-	response, err := db.Query("SELECT * FROM recipe WHERE active = @Active", sql.Named("Active", active))
+	response, err := db.Query("SELECT * FROM custom_recipe WHERE active = ?", active)
+	// response, err := db.Query("SELECT * FROM custom_recipe WHERE active = @Active", sql.Named("Active", active))
 
 	if util.HandleError("Database.go/Error grabbing recipes: ", err) {
 		return nil, err
@@ -215,13 +231,22 @@ func IsRecipeItem(foodString string) int64 {
 	}
 
 	// TODO CONTAINS needs to be checked
+	/*
+		sqlRow := db.QueryRow(`
+			SELECT *
+			FROM recipe
+			WHERE food_string
+			LIKE '@FoodString' OR alt_recipe_names CONTAINS '@FoodString'
+		`,
+			sql.Named("FoodString", parse.FoodString))
+	*/
 	sqlRow := db.QueryRow(`
 		SELECT *
 		FROM recipe
 		WHERE food_string
-		LIKE '@FoodString' OR alt_recipe_names CONTAINS '@FoodString'
+		LIKE '?' OR alt_recipe_names CONTAINS '?'
 	`,
-		sql.Named("FoodString", parse.FoodString))
+		parse.FoodString)
 
 	if util.HandleError(functionName+"Error querying recipe from food_string: "+foodString, sqlRow.Err()) {
 		return -1
@@ -247,7 +272,8 @@ func GetRecipeItem(foodString string) *models.CustomRecipe {
 		return nil
 	}
 
-	sqlRow := db.QueryRow(`SELECT * FROM recipe WHERE id=@RecipeId`, sql.Named("RecipeId", recipeId))
+	// sqlRow := db.QueryRow(`SELECT * FROM recipe WHERE id=@RecipeId`, sql.Named("RecipeId", recipeId))
+	sqlRow := db.QueryRow(`SELECT * FROM recipe WHERE id=?`, recipeId)
 
 	recipeItem, err := scanRecipe(sqlRow)
 	if util.HandleError(functionName+"Error scanning recipe item: ", err) {
@@ -350,6 +376,53 @@ func CheckUserInputForRecipes(userInputArray []models.ParsedUserInput) []models.
 // space
 // space
 // space
+
+func SaveRecipeJson(c *gin.Context) {
+	functionName := "SaveRecipeJson/"
+	bodyJson, err := util.ReadRequestBody(c.Request.Body)
+	if util.HandleError(functionName, err) {
+		return
+	}
+
+	// put the request body into an object
+	var bodyObj models.SaveRecipeRequestBody
+	err = json.Unmarshal(bodyJson, &bodyObj)
+	if util.HandleError(functionName, err) {
+		// generic error if something goes wrong
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	// if its the standard way, of a food string
+	if !bodyObj.IsMacroInfo {
+		// get all the information related to the user input food string passed in
+		naturalLanguageResponse := GetNaturalLanguageResponse(bodyObj.Recipe.FoodListString)
+		if naturalLanguageResponse == nil {
+			c.JSON(http.StatusInternalServerError, nil)
+			return
+		}
+
+		// save that food string and its nutrition info to the db
+		// get back the nutritionId of the info saved
+		nutritionId, err := SaveNutritionInfo(naturalLanguageResponse.TotalNutritionInformation)
+		if util.HandleError(functionName, err) {
+			c.JSON(http.StatusInternalServerError, nil)
+			return
+		}
+
+		// recipe := models.CustomRecipe{Active: true, FoodListString: bodyObj.FoodListString, Name: bodyObj.RecipeName, ServingSize: bodyObj.NumServings}
+		// recipe.AlternativeRecipeNames = bodyObj.AlternativeRecipeNames
+		err = SaveRecipe(bodyObj.Recipe, nutritionId)
+		if util.HandleError(functionName, err) {
+			c.JSON(http.StatusInternalServerError, nil)
+			return
+		}
+
+	}
+
+	// only thing we care about is that it was successful (for now)
+	c.JSON(http.StatusOK, nil)
+}
 
 // alt recipeNames can be empty (golang doesnt allow default values)
 func GetRecipeItemFromString(recipeName string) (*models.CustomRecipe, error) {

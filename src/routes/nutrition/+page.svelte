@@ -72,13 +72,8 @@
                 Create New Recipe
             </Button>
             <RecipeModal
-                recipe={{
-                    food_string: "ding, dong",
-                    recipe_name: "Diddle",
-                    serving_size: 2,
-                } as CustomRecipe}
+                recipeProp={{} as CustomRecipe}
                 bind:isVisible={newRecipeIsVisible}
-                isEdit={false}
             />
         </div>
         <div id="second-column-half" class="col-md-6 container">

@@ -5,12 +5,19 @@ type GetUserRecipesResponseObject struct {
 	RecipeList []CustomRecipe `json:"recipeList"`
 }
 
-// aligns with RecipeRequestObject
+// aligns with SaveRecipeRequestObject
 type SaveRecipeRequestBody struct {
-	RecipeName             string   `json:"recipeName"`
-	AlternativeRecipeNames []string `json:"alternativeRecipeNames"`
-	FoodListString         string   `json:"foodListString"`
-	NumServings            int64    `json:"numServings"`
+	/*
+		RecipeName             string   `json:"recipeName"`
+		AlternativeRecipeNames []string `json:"alternativeRecipeNames"`
+		FoodListString         string   `json:"foodListString"`
+		NumServings            int64    `json:"numServings"`
+	*/
+	Recipe CustomRecipe `json:"recipe"`
+	//TODO need to implement
+	// the user can either upload the food that the recipe contains,
+	// or the full macro information instead
+	IsMacroInfo bool `json:"isMacroInfo"`
 }
 
 type RecipeResponse struct {

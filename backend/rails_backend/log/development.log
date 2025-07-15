@@ -1,0 +1,122 @@
+Started GET "/test" for ::1 at 2025-07-15 07:59:55 -0500
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY) /*application='RailsBackend'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL) /*application='RailsBackend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='RailsBackend'*/[0m
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 7ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 07:59:56 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 1ms (Views: 0.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:03:17 -0500
+  [1m[36mActiveRecord::SchemaMigration Load (0.6ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='RailsBackend'*/[0m
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 8ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:04:52 -0500
+Processing by TestController#index as HTML
+Completed 200 OK in 1ms (Views: 0.3ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/favicon.ico" for ::1 at 2025-07-15 08:04:53 -0500
+  
+ActionController::RoutingError (No route matches [GET] "/favicon.ico"):
+  
+Started GET "/test" for ::1 at 2025-07-15 08:06:12 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 1ms (Views: 0.7ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:06:13 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 0ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:07:31 -0500
+  [1m[36mActiveRecord::SchemaMigration Load (0.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='RailsBackend'*/[0m
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 6ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:07:57 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 3ms (Views: 0.9ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:08:02 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 3ms (Views: 1.0ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:08:25 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 1ms (Views: 0.5ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:08:30 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 1ms (Views: 0.3ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:11:04 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 2ms (Views: 0.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:11:07 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 1ms (Views: 0.6ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:11:20 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 2ms (Views: 0.5ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:13:26 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 1ms (Views: 0.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:14:27 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 2ms (Views: 0.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:14:29 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 0ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:15:00 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 4ms (Views: 0.4ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/test" for ::1 at 2025-07-15 08:15:01 -0500
+Processing by TestController#index as */*
+  Parameters: {"test" => {}}
+Completed 200 OK in 0ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+

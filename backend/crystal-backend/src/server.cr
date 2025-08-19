@@ -1,4 +1,7 @@
 require "kemal"
+require "./crystal-backend"
+require "./nutritionix"
+require "./util"
 
 Kemal.config.port = 8080
 
@@ -9,14 +12,19 @@ before_all do |env|
   env.response.content_type = "application/json"
 end
 
-get "/" do
-  data = {
-    message: "Hello, JSON!",
-    success: true,
-    items:   [1, 2, 3],
-  }
+# Handle preflight OPTIONS requests
+options "/*" do |env|
+  env.response.status_code = 204
+  ""
+end
 
-  data.to_json
+get "/coolStuff" do
+end
+
+post "/userFoodQuery" do |env|
+  foodQuery = env.params.json["userFoodQuery"].as(String)
+  responseJson = Nutritionix.naturalLanguageQuery(foodQuery)
+  responseJson.to_json
 end
 
 Kemal.run

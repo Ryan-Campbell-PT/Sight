@@ -2,7 +2,14 @@
     import { onMount } from "svelte";
 
     let ding = async () => {
-        var res = await fetch("http://localhost:8080/", {});
+        const body = {
+            userFoodQuery: "1 banana, 2 cookies",
+        };
+        var res = await fetch("http://localhost:8080/userFoodQuery", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
         if (res.ok) {
             console.log(await res.json());
         }

@@ -15,3 +15,5 @@ license: MIT
 dependencies:
   kemal:
     github: kemalcr/kemal
+  dotenv:
+    github: gdotdesign/cr-dotenv

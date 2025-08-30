@@ -15,7 +15,17 @@
         }
     };
 
-    onMount(() => ding());
+    let dong = async () => {
+        var res = await fetch("http://localhost:8080/coolStuff", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        });
+        if (res.ok) {
+            console.log(await res.json());
+        }
+    };
+
+    onMount(() => dong());
 </script>
 
 <h1>Welcome to SvelteKit</h1>

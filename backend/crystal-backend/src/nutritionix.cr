@@ -7,7 +7,7 @@ module Nutritionix
 
   # Takes a users foodList query, reaches out to the nutritionix api, returns the json from the api
   def naturalLanguageQuery(userFoodQuery : String)
-    cfg = Config.from_env
+    cfg = EnvConfig.from_env
     body = {
       query: userFoodQuery,
     }.to_json
@@ -24,16 +24,16 @@ module Nutritionix
     )
 
     # turn into a custom object
-    response = NaturalLangaugeResponse.from_json(r.body)
+    response = NutritionixNaturalLangaugeResponse.from_json(r.body)
     return response
   end
 
-  struct NaturalLangaugeResponse
+  struct NutritionixNaturalLangaugeResponse
     include JSON::Serializable
-    property foods : Array(Food)
+    property foods : Array(NutritionixFood)
   end
 
-  struct Food
+  struct NutritionixFood
     include JSON::Serializable
 
     property food_name : String
@@ -53,38 +53,37 @@ module Nutritionix
     property nf_potassium : Float64
     property nf_p : Float64?
 
-    property full_nutrients : Array(Nutrient)
-    # property nix_brand_name : String?
-    # property nix_brand_id : String?
-    # property nix_item_name : String?
-    # property nix_item_id : String?
-    # property upc : String?
+    property full_nutrients : Array(NutritionixNutrient)
+    property nix_brand_name : String?
+    property nix_brand_id : String?
+    property nix_item_name : String?
+    property nix_item_id : String?
+    property upc : String?
 
-    # property consumed_at : String
-    # property metadata : Metadata
+    property consumed_at : String
 
-    # property source : Int32
-    # property ndb_no : Int32?
-    # property tags : Tags
-    # property alt_measures : Array(AltMeasure)?
-    # property lat : Float64?
-    # property lng : Float64?
-    # property meal_type : Int32
-    # property photo : Photo
-    # property sub_recipe : Bool?
-    # property class_code : String?
-    # property brick_code : String?
-    # property tag_id : String?
+    property source : Int32
+    property ndb_no : Int32?
+    property tags : NutritionixTags
+    property alt_measures : Array(NutritionixAltMeasure)?
+    property lat : Float64?
+    property lng : Float64?
+    property meal_type : Int32
+    property photo : NutritionixPhoto
+    property sub_recipe : Bool?
+    property class_code : String?
+    property brick_code : String?
+    property tag_id : String?
   end
 
-  struct Nutrient
+  struct NutritionixNutrient
     include JSON::Serializable
 
     property attr_id : Int32
     property value : Float64
   end
 
-  struct Tags
+  struct NutritionixTags
     include JSON::Serializable
 
     property item : String
@@ -94,7 +93,7 @@ module Nutritionix
     property tag_id : Int32
   end
 
-  struct AltMeasure
+  struct NutritionixAltMeasure
     include JSON::Serializable
 
     property serving_weight : Float64
@@ -103,7 +102,7 @@ module Nutritionix
     property qty : Float64
   end
 
-  struct Photo
+  struct NutritionixPhoto
     include JSON::Serializable
 
     property thumb : String

@@ -1,6 +1,6 @@
 require "dotenv"
 
-struct Config
+struct EnvConfig
   include JSON::Serializable
 
   property user : String
@@ -17,6 +17,10 @@ struct Config
   property azure_server : String
   property azure_port : Int64
 
+  property postgres_user : String
+  property postgres_password : String
+  property postgres_database : String
+
   def initialize(
     @user : String,
     @password : String,
@@ -30,10 +34,13 @@ struct Config
     @azure_database : String,
     @azure_server : String,
     @azure_port : Int64,
+    @postgres_user : String,
+    @postgres_password : String,
+    @postgres_database : String,
   )
   end
 
-  def self.from_env : Config
+  def self.from_env : EnvConfig
     Dotenv.load
 
     new(
@@ -48,7 +55,10 @@ struct Config
       azure_password: ENV["Azure_Password"]? || "",
       azure_database: ENV["Azure_Database"]? || "",
       azure_server: ENV["Azure_Server"]? || "",
-      azure_port: (ENV["Azure_Port"]? || "0").to_i64
+      azure_port: (ENV["Azure_Port"]? || "0").to_i64,
+      postgres_user: ENV["PostgreSQL_User"]? || "",
+      postgres_password: ENV["PostgreSQL_Password"]? || "",
+      postgres_database: ENV["PostgreSQL_Database"]? || "",
     )
   end
 end

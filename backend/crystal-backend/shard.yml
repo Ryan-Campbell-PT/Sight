@@ -17,3 +17,5 @@ dependencies:
     github: kemalcr/kemal
   dotenv:
     github: gdotdesign/cr-dotenv
+  pg:
+    github: will/crystal-pg

@@ -17,4 +17,16 @@ struct Recipe
     @nutrition_id : Int32 = 0,
   )
   end
+
+  # result set, aka db row
+  def self.from_rs(rs)
+    new(
+      rs.read(Int32),
+      rs.read(String),
+      rs.read(String),
+      rs.read(Int32),
+      rs.read(Bool),
+      rs.read(Int32)
+    )
+  end
 end

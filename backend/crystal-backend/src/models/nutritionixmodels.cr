@@ -68,7 +68,7 @@ struct NutritionixAltMeasure
 
   property serving_weight : Float64
   property measure : String
-  property seq : Int32
+  property seq : Int32 | Nil
   property qty : Float64
 end
 

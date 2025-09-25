@@ -91,4 +91,8 @@ module Util
     return nil unless unit
     UNIT_MAP[unit.downcase]?
   end
+
+  # rounding can be done using number.round(decimalplace)
+  def round_to_nearest_decimal
+  end
 end

@@ -5,7 +5,9 @@ require "./nutritionix"
 require "./util"
 require "./database"
 require "./models/databasemodels"
+require "./models/foodquerymodels"
 require "./foods"
+require "./llm"
 
 Kemal.config.port = 8080
 
@@ -59,13 +61,23 @@ get "/coolStuff" do
 end
 
 post "/userFoodQuery" do |env|
+  response = UserFoodQueryResponse.new
+
   # grab the users food string
   foodQuery = env.params.json["userFoodQuery"].as(String)
+
+  # analyse the string provided and get whatever information it catches
+  llm = LLM.new(foodQuery)
+
   # the food string may contain food, recipes, or errors. handle all three
-  # recipeList, newFoodQueryString, errors =
-  # send the food string to the nutritionix api, get back the nutrition info
-  responseJson = Foods.natural_language_query(foodQuery)
-  responseJson.to_json
+  # send the food string to the nutritionix api, get back the raw nutrition info
+  nixResponse = Foods.natural_language_query(llm.original_query_string)
+
+  # errorList = llm.check_for_errors
+
+  # transform that raw data into something that will be manipulated throughout the app
+
+  nixResponse.to_json
 end
 
 Kemal.run

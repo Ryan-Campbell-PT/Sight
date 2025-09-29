@@ -1,5 +1,13 @@
 require "json"
 
+# Response object containing all information relevant to a userFoodQuery request
+class UserFoodQueryResponse
+  include JSON::Serializable
+
+  property list_of_foods : ListOfFoods
+  property errors : Array(AnalysisErrorObject)
+end
+
 # Counterpart to NutritionixFood, this holds all the necessary data for the app,
 # condensed down and given more functionality
 struct FoodItem
@@ -9,6 +17,7 @@ struct FoodItem
   property brand_name : String?
   property serving_qty : Int32
   property serving_unit : String
+  property is_recipe : Bool
   property full_nutrient_dict : Hash(Int32, Float32) # https://crystal-lang.org/api/1.17.1/Hash.html
 
   def initialize(
@@ -16,6 +25,7 @@ struct FoodItem
     @brand_name = "",
     @serving_qty = 0,
     @serving_unit = "",
+    @is_recipe = false,
     full_nutrients : Array(NutritionixNutrient) = [] of Array(NutritionixNutrient),
   )
     dict = Hash(Int32, Float32).new
@@ -37,7 +47,13 @@ class ListOfFoods
   def initialize(jsonResponse : NutritionixNaturalLangaugeResponse)
     @food_list = Array(FoodItem).new
     jsonResponse.foods.each do |food|
-      foodListItem = FoodItem.new(food.food_name, food.brand_name, food.serving_qty, food.serving_unit, food.full_nutrients)
+      foodListItem = FoodItem.new(
+        food.food_name,
+        food.brand_name,
+        food.serving_qty,
+        food.serving_unit,
+        food.full_nutrients
+      )
       @food_list << foodListItem
     end
   end

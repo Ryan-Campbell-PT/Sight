@@ -38,7 +38,9 @@ module Database
       SELECT id
       FROM recipe
       WHERE recipe_name ilike $1
-      AND active = true", "%#{str}%", as: Int32) || nil
+      AND active = true",
+      # "%#{str}%", as: Int32) || nil
+      "#{str}", as: Int32) || nil
   end
 end
 

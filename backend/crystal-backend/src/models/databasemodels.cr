@@ -8,6 +8,9 @@ struct Recipe
   property active : Bool
   property nutrition_id : Int32
 
+  # this will eventually have to be added, not that many people will use this but to decern recipes from user
+  # property user_id : Int32
+
   def initialize(
     @id : Int32 = 0,
     @recipe_name : String = "",

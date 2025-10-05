@@ -60,6 +60,44 @@ get "/coolStuff" do
   # end
 end
 
+# this should account for both create and edit, passing the recipeId in if its an edit, or empty/-1 if not
+# also passes in an 'ignore_recipe' property that allows you to add recipes to your recipe
+post "/post_recipe" do |env|
+  response = PostRecipeResponse.new
+  response.recipe_id = -1
+
+  recipeId = env.params.json["recipe_id"].as(Int32)
+  foodQuery = env.params.json["user_food_query"].as(String)
+  ignoreRecipe = env.params.json["ignore_recipe"].as(Bool)
+
+  llm = LLM.new(foodQuery)
+  # if a recipe is included in the query, confirm it by the user first (could match a recipe they didnt mean/know)
+  if (llm.get_only_recipe_items.size > 0 && !ignoreRecipe)
+    llm.get_only_recipe_items.each do |qb|
+      response.errors << AnalysisErrorObject.new(qb.full_string)
+    end
+    return response.to_json
+  end
+
+  nixResponse = Foods.natural_language_query(llm.original_query_string)
+  errorList = llm.check_for_errors(nixResponse)
+  # dont go forward with creating/updating a recipe if there are issues with the string typed in
+  if (errorList.size > 0)
+    response.errors << errorList
+    return response.to_json
+  end
+
+  # transform the nix response into something to use
+  foodList = ListOfFoods.new(nixResponse)
+  # get all the recipeIds to pass into the db
+  recipeIdList = llm.get_only_recipe_items.map(&.recipe_id)
+  # combine any recipes with nix foods to create a totals array
+  listOfFoods = Foods.combine_food_with_recipes(foodList, RecipeService.get_many(recipeIdList))
+  totalNutrition = listOfFoods.get_total_nutrition_data
+
+  response.to_json
+end
+
 post "/userFoodQuery" do |env|
   response = UserFoodQueryResponse.new
 

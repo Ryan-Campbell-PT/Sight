@@ -1,3 +1,5 @@
+require "json"
+
 struct NutritionixNaturalLangaugeResponse
   include JSON::Serializable
   property foods : Array(NutritionixFood)

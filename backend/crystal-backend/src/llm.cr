@@ -21,7 +21,6 @@ class LLM
     # count_regex = \b\d*\s?(?:[a-zA-Z]{1,5}s?)\b
     # food_regex = \b[a-zA-Z][a-zA-Z'\- ]+\b
 
-    @user_string_no_recipes = ""
     @user_query_bits = original_query_string.split(',').map_with_index do |str, index|
       trimmed = str.strip.downcase
       next unless match = regex.match(trimmed)

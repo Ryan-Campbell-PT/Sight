@@ -34,7 +34,7 @@ module Database
 
   # checks if the string provided exists in the database
   def self.check_for_active_recipe(str : String) : Int32 | Nil
-    Database.connect.query_one?("
+    Database.db.query_one?("
       SELECT id
       FROM recipe
       WHERE recipe_name ilike $1

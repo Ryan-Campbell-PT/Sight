@@ -15,6 +15,9 @@ class PostRecipeResponse
 
   property recipe_id : Int32 # Recipe_id for the created or updated recipe
   property errors : Array(AnalysisErrorObject)
+
+  def initialize(@recipe_id : Int32 = -1, @errors : Array(AnalysisErrorObject) = Array(AnalysisErrorObject).new)
+  end
 end
 
 # Counterpart to NutritionixFood, this holds all the necessary data for the app,
@@ -35,7 +38,7 @@ struct FoodItem
     @serving_qty = 0,
     @serving_unit = "",
     @is_recipe = false,
-    full_nutrients : Array(NutritionixNutrient) = [] of Array(NutritionixNutrient),
+    full_nutrients : Array(NutritionixNutrient) = Array(NutritionixNutrient).new,
   )
     dict = Hash(Int32, Float32).new
     full_nutrients.each do |nut|
@@ -61,6 +64,7 @@ class ListOfFoods
         food.brand_name,
         food.serving_qty,
         food.serving_unit,
+        false,
         food.full_nutrients
       )
       @food_list << foodListItem
@@ -72,7 +76,7 @@ class ListOfFoods
     food_list.each do |food|
       food.full_nutrient_dict.each do |key, value|
         ret.full_nutrient_dict[key] ||= 0.0 # set the default value if the key doesnt exist
-        ret.full_nutrient_dict[key] += value
+        ret.full_nutrient_dict[key] = (ret.full_nutrient_dict[key] + value).round(2)
       end
     end
     ret

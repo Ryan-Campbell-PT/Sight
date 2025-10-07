@@ -91,8 +91,12 @@ post "/post_recipe" do |env|
   foodList = ListOfFoods.new(nixResponse)
   # get all the recipeIds to pass into the db
   recipeIdList = llm.get_only_recipe_items.map(&.recipe_id)
+  recipeList = RecipeService.get_many(recipeIdList)
+
+  # recipes contain the id of their nutrition_info
+  # convert those ids to foodItems to use throughout the app
   # combine any recipes with nix foods to create a totals array
-  listOfFoods = Foods.combine_food_with_recipes(foodList, RecipeService.get_many(recipeIdList))
+  listOfFoods = Foods.combine_food_with_recipes(foodList, recipeList)
   totalNutrition = listOfFoods.get_total_nutrition_data
 
   response.to_json

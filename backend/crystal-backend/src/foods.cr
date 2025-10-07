@@ -33,7 +33,22 @@ module Foods
   def combine_food_with_recipes(
     foodList : Array(FoodItem) = [] of FoodItem,
     recipeList : Array(Recipe) = [] of Recipe,
-  ) : ListOfFoods
+  ) : Array(FoodItem)
+    ret = Array(FoodItem).new
+
+    recipeFoodList = Array(FoodItem).new
+    recipeList.each do |r|
+      recipeFoodItem = Foods.convert_recipe_to_food_item(r)
+      next unless recipeFoodItem
+      recipeFoodList << recipeFoodItem
+      # nutInfo = RecipeService.get_nutrition_info(r)
+      # next unless nutInfo
+
+      # recipeFoodList << nutInfo
+    end
+
+    ret.concat(recipeFoodList)
+    ret
   end
 
   def convert_nutrition_info_to_food_item(nutInfo : NutritionInfo) : FoodItem
@@ -42,25 +57,32 @@ module Foods
   end
 
   # i think this will be the better function but we will see
-  def convert_recipe_to_food_item(r : Recipe) : FoodItem
+  def convert_recipe_to_food_item(r : Recipe) : FoodItem?
     ret = FoodItem.new
     ret.serving_qty = r.serving_size
     # ret.serving_unit = r.serving_unit
     ret.is_recipe = true
 
     # TODO put this somewhere else, for now just prototype
-    nutInfo = Database.db.query_one?("SELECT * FROM nutrition_info WHERE id = $1", r.nutrition_id)
+    nutInfo = RecipeService.get_nutrition_info(r)
+    unless nutInfo
+      return nil
+    end
 
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Calories)] = nutInfo.calories
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalFat)] = nutInfo.total_fat
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::SaturatedFat)] = nutInfo.saturated_fat
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::TransFar)] = nutInfo.trans_fat
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Protein)] = nutInfo.protein
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Sugar)] = nutInfo.sugar
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Sodium)] = nutInfo.sodium
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Fiber)] = nutInfo.fiber
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Cholesterol)] = nutInfo.cholesterol
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Potassium)] = nutInfo.potassium
-    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Phosphorus)] = nutInfo.phosphorus
+    # automation for this is complicated and i dont understand it, so for now I will not use it
+    # reflection functionality isnt realy built into crystal, so it may just not be possible
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Calories)] = nutInfo.calories.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalFat)] = nutInfo.total_fat.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::SaturatedFat)] = nutInfo.saturated_fat.to_f32.round(2)
+    # ret.full_nutrient_dict[get_nutrition_id(NutritionValues::TransFat)] = nutInfo.trans_fat.to_f32
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Protein)] = nutInfo.protein.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Sugar)] = nutInfo.sugar.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Sodium)] = nutInfo.sodium.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Fiber)] = nutInfo.fiber.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Cholesterol)] = nutInfo.cholesterol.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Potassium)] = nutInfo.potassium.to_f32.round(2)
+    ret.full_nutrient_dict[get_nutrition_id(NutritionValues::Phosphorus)] = nutInfo.phosphorus.to_f32.round(2)
+
+    ret
   end
 end

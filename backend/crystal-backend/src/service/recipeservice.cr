@@ -1,5 +1,6 @@
 require "../models/databasemodels"
 require "../database"
+require "../models/foodquerymodels"
 
 module RecipeService
   extend self
@@ -17,15 +18,19 @@ module RecipeService
   end
 
   def get_many(ids : Array(Int32)) : Array(Recipe)
-    Database.db.query("SELECT * FROM recipe WHERE id IN ($1)", ids.join(","), as: Recipe)
+    ret = Array(Recipe).new
+    Database.db.query("SELECT * FROM recipe WHERE id IN ($1)", ids.join(",")) do |rs|
+      # TODO check back on this in compile time, i kept getting the error
+      # expected argument #1 to 'Array(Recipe)#<<' to be Recipe, not Array(Recipe)
+      # when trying to << individual recipes, but it seems doing Recipe.from_rs(rs) is making an array from the rs, not individual objects
+      # which wasnt totally my intention, but if that is indeed what its doing then it saves a few lines of code
+      ret.concat(Recipe.from_rs(rs))
+    end
+    ret
   end
 
-  def get_nutrition(r : Recipe) : FoodItem?
-    rs = Database.db.query - one?("SELECT * FROM nutrition_info WHERE id = $1", r.nutrition_id, as: NutritionInfo)
-    if (rs?)
-      NutritionInfo.from_rs(rs)
-    end
-    nil
+  def get_nutrition_info(r : Recipe) : NutritionInfo?
+    Database.db.query_one?("SELECT * FROM nutrition_info WHERE id = $1", r.nutrition_id, as: NutritionInfo)
   end
 
   def create(r : Recipe) : Int32

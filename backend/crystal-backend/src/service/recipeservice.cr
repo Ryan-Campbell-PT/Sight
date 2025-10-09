@@ -29,15 +29,17 @@ module RecipeService
     ret
   end
 
-  def get_nutrition_info(r : Recipe) : NutritionInfo?
-    Database.db.query_one?("SELECT * FROM nutrition_info WHERE id = $1", r.nutrition_id, as: NutritionInfo)
-  end
-
-  def create(r : Recipe) : Int32
-    Database.db.exec("
+  def create(r : Recipe) : Int32?
+    Database.db.query_one("
     CREATE recipe (recipe_name, food_string, serving_size, active, nutrition_id)
-    VALUES ($1, $2, $3, $4, $5)"
-    )
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id",
+      r.recipe_name,
+      r.food_string,
+      r.serving_size,
+      true,
+      r.nutrition_id,
+      as: Int32)
   end
 
   def delete(id : Int32) : Bool

@@ -66,9 +66,24 @@ post "/post_recipe" do |env|
   response = PostRecipeResponse.new
   response.recipe_id = -1
 
+  # TODO more information needs to be passed in if this is an edit of a recipe
+  # recipeId is really only used to determine which recipe needs to be updated
+  # foodquery, serving size, name
+  # and then create a recipe from it
   recipeId = env.params.json["recipe_id"].as(Int32)
+  recipeName = env.params.json["recipe_name"].as(String)
+  recipeServings = env.params.json["recipe_servings"].as(Int32)
   foodQuery = env.params.json["user_food_query"].as(String)
   ignoreRecipe = env.params.json["ignore_recipe"].as(Bool)
+
+  r = Recipe.new(
+    recipeId,
+    recipeName,
+    foodQuery,
+    recipeServings,
+    true,
+    -1 # TODO every recipe should have their own distinct nutId, so youll need to grab it from the db to use
+  )
 
   llm = LLM.new(foodQuery)
   # if a recipe is included in the query, confirm it by the user first (could match a recipe they didnt mean/know)
@@ -83,21 +98,40 @@ post "/post_recipe" do |env|
   errorList = llm.check_for_errors(nixResponse)
   # dont go forward with creating/updating a recipe if there are issues with the string typed in
   if (errorList.size > 0)
-    response.errors << errorList
+    response.errors.concat(errorList)
     return response.to_json
   end
 
   # transform the nix response into something to use
   foodList = ListOfFoods.new(nixResponse)
   # get all the recipeIds to pass into the db
-  recipeIdList = llm.get_only_recipe_items.map(&.recipe_id)
-  recipeList = RecipeService.get_many(recipeIdList)
+  recipeIdList = llm.get_only_recipe_items.compact_map(&.recipe_id)
+  if recipeIdList.size > 0
+    recipeList = RecipeService.get_many(recipeIdList)
 
-  # recipes contain the id of their nutrition_info
-  # convert those ids to foodItems to use throughout the app
-  # combine any recipes with nix foods to create a totals array
-  listOfFoods = Foods.combine_food_with_recipes(foodList, recipeList)
-  totalNutrition = listOfFoods.get_total_nutrition_data
+    # recipes contain the id of their nutrition_info
+    # convert those ids to foodItems to use throughout the app
+    # combine any recipes with nix foods to create a totals array
+    listOfFoods = Foods.combine_food_with_recipes(foodList.food_list, recipeList)
+    foodList.food_list = listOfFoods
+  end
+
+  totalNutrition = foodList.get_total_nutrition_data
+
+  if recipeId > 0
+    RecipeService.update(r)
+    NutritionInfoService.update_from_foodinfo(r.nutrition_id, totalNutrition)
+  else
+    # recipes require nutInfo upon creation, so make that first
+    nutId = NutritionInfoService.create_from_foodinfo(totalNutrition)
+    if nutId
+      r.nutrition_id = nutId
+      recipeId = RecipeService.create(r)
+      if recipeId
+        response.recipe_id = recipeId
+      end
+    end
+  end
 
   response.to_json
 end

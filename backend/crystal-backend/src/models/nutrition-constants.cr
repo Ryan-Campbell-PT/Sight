@@ -4,6 +4,8 @@ module NutritionValues
   TotalCarbohydrate = "TotalCarbohydrate"
   TotalFat = "TotalFat"
   SaturatedFat = "SaturatedFat"
+  PolyFat = "PolyFat"
+  MonoFat = "MonoFat"
   TransFat = "TransFat"
   Protein = "Protein"
   Sugar = "Sugar"
@@ -21,6 +23,8 @@ NUTRITION_MAP = {
   NutritionValues::TotalCarbohydrate => {id: 205, unit: "g", daily_value: nil, dbName: "carbs", display_name: "Carbs"},
   NutritionValues::TotalFat => {id: 204, unit: "g", daily_value: 78, dbName: "total_fat", display_name: "Total Fat"},
   NutritionValues::SaturatedFat => {id: 606, unit: "g", daily_value: nil, dbName: "saturated_fat", display_name: "Saturated Fat"},
+  NutritionValues::PolyFat => {id: 646, unit: "g", daily_value: nil, dbName: "poly_fat", display_name: "Polyunsaturated Fat"},
+  NutritionValues::MonoFat => {id: 645, unit: "g", daily_value: nil, dbName: "mono_fat", display_name: "Monounsaturated Fat"},
   NutritionValues::TransFat => {id: 605, unit: "g", daily_value: nil, dbName: nil, display_name: "Trans Fat"},
   NutritionValues::Protein => {id: 203, unit: "g", daily_value: nil, dbName: "protein", display_name: "Protein"},
   NutritionValues::Sugar => {id: 269, unit: "g", daily_value: 50, dbName: "sugar", display_name: "Sugar"},

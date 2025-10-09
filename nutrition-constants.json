@@ -32,6 +32,22 @@
         "displayName": "Saturated Fat"
     },
     {
+        "key": "PolyFat",
+        "id": 646,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": "poly_fat",
+        "displayName": "Polyunsaturated Fat"
+    },
+    {
+        "key": "MonoFat",
+        "id": 645,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": "mono_fat",
+        "displayName": "Monounsaturated Fat"
+    },
+    {
         "key": "TransFat",
         "id": 605,
         "unit": "g",

@@ -76,7 +76,6 @@ post "/post_recipe" do |env|
   recipeServings = env.params.json["recipe_servings"].as(Int64).to_i32
   foodQuery = env.params.json["user_food_query"].as(String)
   # ignoreRecipe = env.params.json["ignore_recipe"].as(Bool)
-  puts "got paramaters"
 
   r = Recipe.new(
     recipeId,
@@ -86,13 +85,13 @@ post "/post_recipe" do |env|
     true,
     -1 # TODO every recipe should have their own distinct nutId, so youll need to grab it from the db to use
   )
-  puts "made recipe"
+  if recipeId
+    r.nutrition_id = RecipeService.get_nutrition_id(recipeId)
+  end
 
   llm = LLM.new(foodQuery)
-  puts "made llm"
   # if a recipe is included in the query, confirm it by the user first (could match a recipe they didnt mean/know)
   if (llm.get_only_recipe_items.size > 0) # && !ignoreRecipe)
-    puts "more than 0 recipe"
     llm.get_only_recipe_items.each do |qb|
       response.errors << AnalysisErrorObject.new(qb.full_string)
     end
@@ -102,23 +101,18 @@ post "/post_recipe" do |env|
   end
 
   nixResponse = Foods.natural_language_query(llm.original_query_string)
-  puts "nixresponse"
   errorList = llm.check_for_errors(nixResponse)
-  puts "check for errors"
   # dont go forward with creating/updating a recipe if there are issues with the string typed in
   if (errorList.size > 0)
-    puts "more than one llm error"
     response.errors.concat(errorList)
     next response.to_json
   end
 
   # transform the nix response into something to use
   foodList = ListOfFoods.new(nixResponse)
-  puts "foodlist"
   # get all the recipeIds to pass into the db
   recipeIdList = llm.get_only_recipe_items.compact_map(&.recipe_id)
   if recipeIdList.size > 0
-    puts "recipeidList"
     recipeList = RecipeService.get_many(recipeIdList)
 
     # recipes contain the id of their nutrition_info
@@ -129,22 +123,17 @@ post "/post_recipe" do |env|
   end
 
   totalNutrition = foodList.get_total_nutrition_data
-  puts "total nutrition"
   if recipeId > 0
     RecipeService.update(r)
-    puts "recipe service.update"
     NutritionInfoService.update_from_fooditem(r.nutrition_id, totalNutrition)
-    puts "nutritionservice.update"
   else
     # recipes require nutInfo upon creation, so make that first
-    # nutId = NutritionInfoService.create_from_fooditem(totalNutrition)
-    ding = NutritionInfoService.get(11)
-    nutId = ding ? ding.id : nil
-    puts "made nutinfo"
+    nutId = NutritionInfoService.create_from_fooditem(totalNutrition)
+    # ding = NutritionInfoService.get(11)
+    # nutId = ding ? ding.id : nil
     if nutId
       r.nutrition_id = nutId
       recipeId = RecipeService.create(r)
-      puts "made recipe"
       if recipeId
         response.recipe_id = recipeId
       end

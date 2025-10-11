@@ -34,7 +34,7 @@
 */
     let post_saveRecipe = async () => {
         const request: SaveRecipeRequest = {
-            recipe_id: -1,
+            recipe_id: 8,
             recipe_name: nameOfRecipe,
             recipe_servings: numberOfRecipeServings,
             user_food_query: userFoodQuery,

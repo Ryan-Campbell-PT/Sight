@@ -29,6 +29,10 @@ module RecipeService
     ret
   end
 
+  def get_nutrition_id(recipeId : Int32) : Int32
+    Database.db.query_one("SELECT nutrition_id FROM recipe WHERE id = $1", recipeId, as: Int32)
+  end
+
   def create(r : Recipe) : Int32?
     puts "in recipeservice.create"
     Database.db.query_one("
@@ -67,10 +71,11 @@ module RecipeService
     UPDATE recipe
     SET recipe_name = $1,
         serving_size = $2,
-        active = $3,
-    WHERE id = $4",
+        food_string = $3,
+        active = $4
+    WHERE id = $5",
       r.recipe_name, r.serving_size,
-      r.active, r.id
+      r.food_string, r.active, r.id
     )
 
     true

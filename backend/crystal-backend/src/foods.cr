@@ -2,6 +2,7 @@ require "./models/nutritionixmodels"
 require "./models/foodquerymodels"
 require "./models/nutrition-constants.cr"
 require "./models/databasemodels"
+require "./service/nutritioninfoservice"
 
 module Foods
   extend self
@@ -64,7 +65,7 @@ module Foods
     ret.is_recipe = true
 
     # TODO put this somewhere else, for now just prototype
-    nutInfo = RecipeService.get_nutrition_info(r)
+    nutInfo = NutritionInfoService.get(r.nutrition_id)
     unless nutInfo
       return nil
     end

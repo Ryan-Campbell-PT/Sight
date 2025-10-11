@@ -2,8 +2,6 @@
 pass in an empty Recipe, and have a prop that says "isNew" or something
 and then when a button press, post it to the db and remove the object from the page -->
 <script lang="ts">
-    import type { Recipe } from "../lib/NutritionData";
-
     let { isEditable, recipe }: { isEditable: boolean; recipe: Recipe } =
         $props();
 

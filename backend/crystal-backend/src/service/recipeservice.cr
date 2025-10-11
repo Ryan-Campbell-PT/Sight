@@ -54,15 +54,15 @@ module RecipeService
   def update(r : Recipe) : Bool
     current_data = RecipeService.get(r.id)
 
-    if (r.food_string != current_data.food_string)
-      # TODO updating the nutrition_id is a bit more complicated,
-      # you need to take the food_string, run it against the nix api again
-      # and update that in the nutrition_info table
+    # if (r.food_string != current_data.food_string)
+    # TODO updating the nutrition_id is a bit more complicated,
+    # you need to take the food_string, run it against the nix api again
+    # and update that in the nutrition_info table
 
-      # if this block doesnt run, then that isnt necessary, and you can just update whatever values are changed
-    end
+    # if this block doesnt run, then that isnt necessary, and you can just update whatever values are changed
+    # end
 
-    Database.db.update("
+    Database.db.exec("
     UPDATE recipe
     SET recipe_name = $1,
         serving_size = $2,

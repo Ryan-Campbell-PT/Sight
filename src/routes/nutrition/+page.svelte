@@ -1,17 +1,12 @@
 <script lang="ts">
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
-    import type {
-        Recipe,
-        NaturalLanguageResponseObject,
-        RecipeResponseObject,
-        FoodItem,
-    } from "../../lib/NutritionData";
     import NutritionDisplay from "../../lib/NutritionDisplay.svelte";
     import NutritionLabel from "../../lib/NutritionLabel.svelte";
     import { onMount } from "svelte";
     import CustomRecipe from "$lib/CustomRecipe.svelte";
     import { error } from "@sveltejs/kit";
     import FoodListTextBox from "$lib/NaturalLanguageTextBox.svelte";
+    import type { NixFoodItem } from "$lib/models/NutritionixModels";
 
     let nutritionDisplayIsVisible = $state(false);
     // let nutritionResponse = $state({
@@ -31,7 +26,7 @@
         $state<NaturalLanguageResponseObject>({
             errors: [],
             foods: [],
-            totalNutritionInformation: {} as FoodItem,
+            totalNutritionInformation: {} as NixFoodItem,
         });
 
     let get_recipes = async () => {

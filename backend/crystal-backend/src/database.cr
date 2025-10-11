@@ -17,20 +17,20 @@ module Database
     end
   end
 
-  def self.query(sql : String, *args, &block : DB::ResultSet ->) : Nil
-    # example code
-    # Database.query("SELECT * FROM recipe") do |rs|
-    #   rs.each do
-    #     r = Recipe.from_rs(rs)
-    #     newStr = newStr + "#{r.id} #{r.recipe_name} #{r.food_string} #{r.serving_size} #{r.active} #{r.nutrition_id} \n"
-    #   end
-    # end
-    connect.query sql, *args, &block
-  end
+  # def self.query(sql : String, *args, &block : DB::ResultSet ->) : Nil
+  #   # example code
+  #   # Database.query("SELECT * FROM recipe") do |rs|
+  #   #   rs.each do
+  #   #     r = Recipe.from_rs(rs)
+  #   #     newStr = newStr + "#{r.id} #{r.recipe_name} #{r.food_string} #{r.serving_size} #{r.active} #{r.nutrition_id} \n"
+  #   #   end
+  #   # end
+  #   connect.query sql, *args, &block
+  # end
 
-  def self.exec(sql : String, *args) : Nil
-    connect.exec sql, *args
-  end
+  # def self.exec(sql : String, *args) : Nil
+  #   connect.exec sql, *args
+  # end
 
   # checks if the string provided exists in the database
   def self.check_for_active_recipe(str : String) : Int32 | Nil

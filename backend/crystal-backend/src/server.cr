@@ -8,6 +8,7 @@ require "./models/databasemodels"
 require "./models/foodquerymodels"
 require "./foods"
 require "./llm"
+require "./service/recipeservice"
 
 Kemal.config.port = 8080
 
@@ -34,7 +35,7 @@ get "/coolStuff" do
   r.active = true
   r.nutrition_id = 1
   r.id = 0
-  Database.exec("INSERT INTO recipe (recipe_name, food_string, serving_size, active, nutrition_id) VALUES ($1, $2, $3, $4, $5)",
+  Database.db.exec("INSERT INTO recipe (recipe_name, food_string, serving_size, active, nutrition_id) VALUES ($1, $2, $3, $4, $5)",
     r.recipe_name,
     r.food_string,
     r.serving_size,
@@ -70,9 +71,9 @@ post "/post_recipe" do |env|
   # recipeId is really only used to determine which recipe needs to be updated
   # foodquery, serving size, name
   # and then create a recipe from it
-  recipeId = env.params.json["recipe_id"].as(Int32)
+  recipeId = env.params.json["recipe_id"].as(Int64).to_i32
   recipeName = env.params.json["recipe_name"].as(String)
-  recipeServings = env.params.json["recipe_servings"].as(Int32)
+  recipeServings = env.params.json["recipe_servings"].as(Int64).to_i32
   foodQuery = env.params.json["user_food_query"].as(String)
   ignoreRecipe = env.params.json["ignore_recipe"].as(Bool)
 
@@ -91,7 +92,7 @@ post "/post_recipe" do |env|
     llm.get_only_recipe_items.each do |qb|
       response.errors << AnalysisErrorObject.new(qb.full_string)
     end
-    return response.to_json
+    next response.to_json
   end
 
   nixResponse = Foods.natural_language_query(llm.original_query_string)
@@ -99,7 +100,7 @@ post "/post_recipe" do |env|
   # dont go forward with creating/updating a recipe if there are issues with the string typed in
   if (errorList.size > 0)
     response.errors.concat(errorList)
-    return response.to_json
+    next response.to_json
   end
 
   # transform the nix response into something to use
@@ -120,10 +121,10 @@ post "/post_recipe" do |env|
 
   if recipeId > 0
     RecipeService.update(r)
-    NutritionInfoService.update_from_foodinfo(r.nutrition_id, totalNutrition)
+    NutritionInfoService.update_from_fooditem(r.nutrition_id, totalNutrition)
   else
     # recipes require nutInfo upon creation, so make that first
-    nutId = NutritionInfoService.create_from_foodinfo(totalNutrition)
+    nutId = NutritionInfoService.create_from_fooditem(totalNutrition)
     if nutId
       r.nutrition_id = nutId
       recipeId = RecipeService.create(r)
@@ -136,24 +137,24 @@ post "/post_recipe" do |env|
   response.to_json
 end
 
-post "/userFoodQuery" do |env|
-  response = UserFoodQueryResponse.new
+# post "/userFoodQuery" do |env|
+#   response = UserFoodQueryResponse.new
 
-  # grab the users food string
-  foodQuery = env.params.json["userFoodQuery"].as(String)
+#   # grab the users food string
+#   foodQuery = env.params.json["userFoodQuery"].as(String)
 
-  # analyse the string provided and get whatever information it catches
-  llm = LLM.new(foodQuery)
+#   # analyse the string provided and get whatever information it catches
+#   llm = LLM.new(foodQuery)
 
-  # the food string may contain food, recipes, or errors. handle all three
-  # send the food string to the nutritionix api, get back the raw nutrition info
-  nixResponse = Foods.natural_language_query(llm.original_query_string)
+#   # the food string may contain food, recipes, or errors. handle all three
+#   # send the food string to the nutritionix api, get back the raw nutrition info
+#   nixResponse = Foods.natural_language_query(llm.original_query_string)
 
-  # errorList = llm.check_for_errors
+#   # errorList = llm.check_for_errors
 
-  # transform that raw data into something that will be manipulated throughout the app
+#   # transform that raw data into something that will be manipulated throughout the app
 
-  nixResponse.to_json
-end
+#   nixResponse.to_json
+# end
 
 Kemal.run

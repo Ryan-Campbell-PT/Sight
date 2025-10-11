@@ -1,6 +1,7 @@
 <!-- the nutrition label is the html that will represent the standard Label you see regularly irl -->
+<!--
 <script lang="ts">
-    import type { FoodItem } from "./NutritionData";
+    import type { NixFoodItem } from "./models/NutritionixModels";
     import {
         NutritionLabelContent,
         MacroNutrientIds,
@@ -13,7 +14,7 @@
     let {
         totalNutritionInfo,
         isVisible,
-    }: { totalNutritionInfo: FoodItem; isVisible: boolean } = $props();
+    }: { totalNutritionInfo: NixFoodItem; isVisible: boolean } = $props();
 
     const calculateDailyValuePercentage = (
         currentValue: number,
@@ -56,7 +57,6 @@
             <br />
             <div class="fs-4 d-flex justify-content-between">
                 <span>Calories</span>
-                <!-- TODO im not totally sure i like this, may need to be reworked with the similar functionality to whats used in createNutritionRow -->
                 <span>
                     {roundToDecimal(
                         getNutrientValueFromId(
@@ -91,11 +91,6 @@
                 {@html createNutritionRow(m, false)}
             {/each}
         </div>
-        <!-- <div>
-            secondary component
-        </div>
-        <div>
-            literally everything
-        </div> -->
     </div>
 {/if}
+-->

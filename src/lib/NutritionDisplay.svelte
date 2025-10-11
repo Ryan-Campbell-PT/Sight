@@ -1,7 +1,7 @@
 <!-- nutrition display will contain the Label and all other associated information like the breakdown or edit functionality -->
+<!--
 <script lang="ts">
     import NutritionLabel from "./NutritionLabel.svelte";
-    import type { NaturalLanguageResponseObject } from "./NutritionData";
     import FoodBreakdown from "./FoodBreakdown.svelte";
     import ErrorBreakdown from "./ErrorBreakdown.svelte";
 
@@ -56,3 +56,4 @@
         </table>
     {/if}
 </div>
+-->

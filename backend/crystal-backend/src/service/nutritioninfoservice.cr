@@ -1,4 +1,6 @@
 require "../models/databasemodels"
+require "../models/foodquerymodels"
+
 require "../database"
 
 module NutritionInfoService
@@ -8,22 +10,22 @@ module NutritionInfoService
     Database.db.query_one?("SELECT * FROM nutrition_info WHERE id = $1", id, as: NutritionInfo)
   end
 
-  def create_from_foodinfo(f : FoodInfo) : Int32?
+  def create_from_fooditem(f : FoodItem) : Int32?
     n = NutritionInfo.new(
       -1, # id
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Calories)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::SaturatedFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::PolyFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::MonoFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Cholesterol)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sodium)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Carbs)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Fiber)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sugar)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Protein)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Potassium)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Phosphorus)],
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Calories)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::SaturatedFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::PolyFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::MonoFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Cholesterol)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sodium)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalCarbohydrate)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Fiber)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sugar)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Protein)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Potassium)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Phosphorus)].to_i32,
     )
 
     NutritionInfoService.create(n)
@@ -102,22 +104,22 @@ module NutritionInfoService
     statement.rows_affected > 0 ? true : false
   end
 
-  def update_from_foodinfo(id : Int32, f : FoodInfo) : Int32?
+  def update_from_fooditem(id : Int32, f : FoodItem) : Bool
     n = NutritionInfo.new(
       id,
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Calories)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::SaturatedFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::PolyFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::MonoFat)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Cholesterol)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sodium)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Carbs)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Fiber)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sugar)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Protein)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Potassium)],
-      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Phosphorus)],
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Calories)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::SaturatedFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::PolyFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::MonoFat)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Cholesterol)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sodium)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::TotalCarbohydrate)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Fiber)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Sugar)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Protein)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Potassium)].to_i32,
+      f.full_nutrient_dict[get_nutrition_id(NutritionValues::Phosphorus)].to_i32,
     )
 
     NutritionInfoService.update(n)

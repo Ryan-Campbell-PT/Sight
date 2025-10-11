@@ -15,7 +15,7 @@ for (const n of data)
 ts += "};\n\n";
 ts += `export function getNutritionId(key: NutritionValues): number {\n  return NutritionMap[key].id;\n}\n`;
 
-fs.writeFileSync("./src/NutritionConstants.ts", ts);
+fs.writeFileSync("./src/lib/models/NutritionConstants.ts", ts);
 
 // --- Generate Crystal ---
 let cr = "# AUTO-GENERATED — DO NOT EDIT\n";

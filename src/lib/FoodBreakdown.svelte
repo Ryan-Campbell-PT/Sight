@@ -1,3 +1,4 @@
+<!--
 <script lang="ts">
     import {
         type FoodItem,
@@ -74,3 +75,4 @@
         )}
     </td>
 </tr>
+-->

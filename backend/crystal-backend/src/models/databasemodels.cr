@@ -12,6 +12,9 @@ struct Recipe
   property active : Bool
   property nutrition_id : Int32
 
+  # adding color feels like a good idea to let you categorize recipes in a way
+  # property color : String
+
   # this will eventually have to be added, not that many people will use this but to decern recipes from user
   # property user_id : Int32
 

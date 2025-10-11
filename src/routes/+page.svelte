@@ -34,7 +34,7 @@
 */
     let post_saveRecipe = async () => {
         const request: SaveRecipeRequest = {
-            recipe_id: undefined,
+            recipe_id: -1,
             recipe_name: nameOfRecipe,
             recipe_servings: numberOfRecipeServings,
             user_food_query: userFoodQuery,
@@ -62,12 +62,19 @@
         />
 
         <Input
+            id="numServings"
+            type="number"
+            placeholder="Number of Servings"
+            bind:value={numberOfRecipeServings}
+        />
+
+        <Input
             id="userFoodQuery"
             type="textarea"
             placeholder="List of foods or recipes, seperated by comma"
             bind:value={userFoodQuery}
         />
 
-        <Button onclick={() => post_saveRecipe()} />
+        <Button onclick={() => post_saveRecipe()}>Save</Button>
     </div>
 </div>

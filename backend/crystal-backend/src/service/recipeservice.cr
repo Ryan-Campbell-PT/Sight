@@ -30,8 +30,9 @@ module RecipeService
   end
 
   def create(r : Recipe) : Int32?
+    puts "in recipeservice.create"
     Database.db.query_one("
-    CREATE recipe (recipe_name, food_string, serving_size, active, nutrition_id)
+    INSERT INTO recipe (recipe_name, food_string, serving_size, active, nutrition_id)
     VALUES ($1, $2, $3, $4, $5)
     RETURNING id",
       r.recipe_name,

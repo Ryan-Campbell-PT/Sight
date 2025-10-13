@@ -7,7 +7,7 @@ class UserFoodQueryResponse
 end
 
 # Response object containing information relevant to the creation and updating of a recipe
-class PostRecipeResponse
+class SaveRecipeResponse
   include JSON::Serializable
 
   property recipe_id : Int32 # Recipe_id for the created or updated recipe

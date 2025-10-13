@@ -10,10 +10,9 @@
         Label,
         Input,
     } from "@sveltestrap/sveltestrap";
-    import { onMount } from "svelte";
 
     let {
-        recipe = $bindable(undefined),
+        recipe = undefined,
         isOpen = false,
         onCancel = () => {},
         onSave = (r: Recipe) => {},
@@ -25,12 +24,10 @@
     } = $props();
 
     let recipeEdit: Recipe | undefined = $state({ ...recipe } as Recipe);
-
-    const toggle = () => (isOpen = !isOpen);
 </script>
 
 <Modal {isOpen}>
-    <ModalHeader>Enter Information</ModalHeader>
+    <ModalHeader>Recipe Info</ModalHeader>
     {#if recipeEdit}
         <ModalBody>
             <Form>

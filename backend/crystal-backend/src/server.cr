@@ -65,7 +65,7 @@ end
 # this should account for both create and edit, passing the recipeId in if its an edit, or empty/-1 if not
 # also passes in an 'ignore_recipe' property that allows you to add recipes to your recipe
 post "/post_recipe" do |env|
-  response = PostRecipeResponse.new
+  response = SaveRecipeResponse.new
   response.recipe_id = -1
 
   # TODO more information needs to be passed in if this is an edit of a recipe

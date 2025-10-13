@@ -9,6 +9,7 @@ require "./models/foodquerymodels"
 require "./foods"
 require "./llm"
 require "./service/recipeservice"
+require "./models/responsemodels"
 
 Kemal.config.port = 8080
 
@@ -140,6 +141,12 @@ post "/post_recipe" do |env|
     end
   end
 
+  response.to_json
+end
+
+get "/get_active_recipes" do |env|
+  rList = RecipeService.all_active(true)
+  response = GetActiveRecipesResponse.new(rList)
   response.to_json
 end
 

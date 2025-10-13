@@ -1,3 +1,5 @@
+import type { NixFoodItem } from "./NutritionixModels";
+
 interface NaturalLanguageResponseObject {
     foods: NixFoodItem[];
     totalNutritionInformation: NixFoodItem;
@@ -9,4 +11,8 @@ interface RecipeResponseObject {
 }
 
 interface SaveRecipeResponse extends DefaultErrorResponse {
+}
+
+export interface GetActiveRecipes extends DefaultErrorResponse {
+    recipe_list: Recipe[];
 }

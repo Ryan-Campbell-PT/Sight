@@ -1,15 +1,35 @@
 <script lang="ts">
-    import { Input, Label, Button } from "@sveltestrap/sveltestrap";
-    import { onMount } from "svelte";
+    import { getAllContexts, onMount } from "svelte";
     import type {
         NaturalLanguageRequest,
         SaveRecipeRequest,
     } from "../lib/models/RequestModels";
+    import type { GetActiveRecipes } from "../lib/models/ResponseModels";
+    import { json } from "@sveltejs/kit";
+    import EditRecipeModal from "$lib/EditRecipeModal.svelte";
+    import {
+        Modal,
+        ModalHeader,
+        ModalBody,
+        ModalFooter,
+        Button,
+        Form,
+        FormGroup,
+        Label,
+        Input,
+    } from "@sveltestrap/sveltestrap";
+    import EditRecipeBox from "$lib/EditRecipeBox.svelte";
+    import { bootstrap } from "$lib/bootstrapClasses";
 
     // state
-    let userFoodQuery = $state("");
-    let nameOfRecipe = $state("");
-    let numberOfRecipeServings = $state("");
+    let selectedRecipeId: number = $state(-1);
+    let userFoodQuery: string = $state("");
+    let nameOfRecipe: string = $state("");
+    let numberOfRecipeServings: string = $state("");
+
+    let activeRecipeList: Recipe[] = $state([] as Recipe[]);
+
+    let modalIsOpen: boolean = $state(false);
 
     // props
     let {}: {} = $props();
@@ -34,7 +54,7 @@
 */
     let post_saveRecipe = async () => {
         const request: SaveRecipeRequest = {
-            recipe_id: 8,
+            recipe_id: selectedRecipeId,
             recipe_name: nameOfRecipe,
             recipe_servings: numberOfRecipeServings,
             user_food_query: userFoodQuery,
@@ -49,6 +69,25 @@
         if (res.ok) {
             console.log("Successful recipe save");
         }
+    };
+
+    let get_activeRecipes = async () => {
+        const res = await fetch("http://localhost:8080/get_active_recipes", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        });
+
+        if (res.ok) {
+            const response = (await res.json()) as GetActiveRecipes;
+            activeRecipeList = response.recipe_list;
+        }
+    };
+
+    onMount(() => get_activeRecipes());
+
+    // modal
+    let setModalIsOpen = (isOpen: boolean) => {
+        modalIsOpen = isOpen;
     };
 </script>
 
@@ -76,5 +115,10 @@
         />
 
         <Button onclick={() => post_saveRecipe()}>Save</Button>
+    </div>
+    <div id="activeRecipes" class="d-flex flex-wrap gap-4">
+        {#each activeRecipeList as r}
+            <EditRecipeBox onClick={() => {}} recipe={r} />
+        {/each}
     </div>
 </div>

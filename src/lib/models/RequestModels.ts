@@ -3,13 +3,10 @@ export interface NaturalLanguageRequest {
 }
 
 
-interface SaveRecipeRequest {
+export interface PostRecipeRequest {
     recipe_id?: number; // for if an already made recipe is being updated
     recipe_name: string;
-    recipe_servings: string;
+    recipe_servings: number;
     // recipe_color: string; for later
     user_food_query: string;
 }
-
-
-export type { SaveRecipeRequest }

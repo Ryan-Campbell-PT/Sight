@@ -2,7 +2,7 @@
     import { getAllContexts, onMount } from "svelte";
     import type {
         NaturalLanguageRequest,
-        SaveRecipeRequest,
+        PostRecipeRequest,
     } from "../lib/models/RequestModels";
     import type { GetActiveRecipes } from "../lib/models/ResponseModels";
     import { json } from "@sveltejs/kit";
@@ -53,7 +53,8 @@
     };
 */
     let post_saveRecipe = async () => {
-        const request: SaveRecipeRequest = {
+        /*
+        const request: PostRecipeRequest = {
             recipe_id: selectedRecipeId,
             recipe_name: nameOfRecipe,
             recipe_servings: numberOfRecipeServings,
@@ -69,6 +70,7 @@
         if (res.ok) {
             console.log("Successful recipe save");
         }
+        */
     };
 
     let get_activeRecipes = async () => {
@@ -80,6 +82,7 @@
         if (res.ok) {
             const response = (await res.json()) as GetActiveRecipes;
             activeRecipeList = response.recipe_list;
+            console.log(activeRecipeList);
         }
     };
 
@@ -120,5 +123,18 @@
         {#each activeRecipeList as r}
             <EditRecipeBox onClick={() => {}} recipe={r} />
         {/each}
+    </div>
+    <div>
+        <EditRecipeBox
+            onClick={() => {}}
+            recipe={{
+                id: -1,
+                food_string: "",
+                recipe_name: "",
+                serving_size: 0,
+                active: false,
+                nutrition_id: -1,
+            } as Recipe}
+        />
     </div>
 </div>

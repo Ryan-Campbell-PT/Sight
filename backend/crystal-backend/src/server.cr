@@ -72,6 +72,7 @@ post "/post_recipe" do |env|
   # recipeId is really only used to determine which recipe needs to be updated
   # foodquery, serving size, name
   # and then create a recipe from it
+
   recipeId = env.params.json["recipe_id"].as(Int64).to_i32
   recipeName = env.params.json["recipe_name"].as(String)
   recipeServings = env.params.json["recipe_servings"].as(Int64).to_i32
@@ -86,7 +87,7 @@ post "/post_recipe" do |env|
     true,
     -1 # TODO every recipe should have their own distinct nutId, so youll need to grab it from the db to use
   )
-  if recipeId
+  if recipeId > 0
     r.nutrition_id = RecipeService.get_nutrition_id(recipeId)
   end
 

@@ -1,6 +1,9 @@
 <script lang="ts">
     import { Button } from "@sveltestrap/sveltestrap";
     import EditRecipeModal from "./EditRecipeModal.svelte";
+    import type { PostRecipeRequest } from "./models/RequestModels";
+    import type { SaveRecipeResponse } from "./models/ResponseModels";
+
     // import { Pencil } from 'lucide-svelte'; // nice lightweight icon set
 
     let modalIsOpen = $state(false);
@@ -24,6 +27,35 @@
 
     let setModalIsOpen = (isOpen: boolean) => {
         modalIsOpen = isOpen;
+    };
+
+    let saveRecipe = async (r: Recipe) => {
+        if (!r) return;
+
+        const request: PostRecipeRequest = {
+            recipe_name: r.recipe_name,
+            recipe_servings: r.serving_size,
+            user_food_query: r.food_string,
+            recipe_id: r.id,
+        };
+
+        const res = await fetch("http://localhost:8080/post_recipe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(request),
+        });
+
+        if (res.ok) {
+            const response: SaveRecipeResponse = await res.json();
+            if (response && response.success) {
+                // display some success alert
+                console.log("Save Recipe success");
+            } else {
+                //display some error
+                console.log("Save recipe errror");
+            }
+        }
+        setModalIsOpen(false);
     };
 </script>
 
@@ -57,8 +89,8 @@
 <EditRecipeModal
     isOpen={modalIsOpen}
     onCancel={() => setModalIsOpen(false)}
-    onSave={() => setModalIsOpen(false)}
-    {recipe}
+    onSave={saveRecipe}
+    bind:recipe
 />
 
 <style>

@@ -10,25 +10,28 @@
         Label,
         Input,
     } from "@sveltestrap/sveltestrap";
+    import { onMount } from "svelte";
 
     let {
-        recipe = undefined,
+        recipe = $bindable(undefined),
         isOpen = false,
         onCancel = () => {},
-        onSave = () => {},
+        onSave = (r: Recipe) => {},
     }: {
         recipe: Recipe | undefined;
         isOpen: boolean;
         onCancel: () => void;
-        onSave: () => void;
+        onSave: (r: Recipe) => void;
     } = $props();
+
+    let recipeEdit: Recipe | undefined = $state({ ...recipe } as Recipe);
 
     const toggle = () => (isOpen = !isOpen);
 </script>
 
 <Modal {isOpen}>
     <ModalHeader>Enter Information</ModalHeader>
-    {#if recipe}
+    {#if recipeEdit}
         <ModalBody>
             <Form>
                 <FormGroup>
@@ -36,7 +39,7 @@
                     <Input
                         id="recipeName"
                         type="text"
-                        bind:value={recipe.recipe_name}
+                        bind:value={recipeEdit.recipe_name}
                         placeholder="Recipe Name"
                     />
                 </FormGroup>
@@ -46,7 +49,7 @@
                     <Input
                         id="foodString"
                         type="textarea"
-                        bind:value={recipe.food_string}
+                        bind:value={recipeEdit.food_string}
                         placeholder="Food String"
                     />
                 </FormGroup>
@@ -56,7 +59,7 @@
                     <Input
                         id="servingSize"
                         type="number"
-                        bind:value={recipe.serving_size}
+                        bind:value={recipeEdit.serving_size}
                         placeholder="Serving size"
                         min="0"
                     />
@@ -67,7 +70,7 @@
                     <Input
                         id="numberInput"
                         type="checkbox"
-                        bind:value={recipe.active}
+                        bind:value={recipeEdit.active}
                     />
                 </FormGroup>
             </Form>
@@ -75,7 +78,8 @@
     {/if}
 
     <ModalFooter>
-        <Button color="primary" on:click={onSave}>Save</Button>
+        <Button color="primary" on:click={() => onSave(recipeEdit)}>Save</Button
+        >
         <Button color="secondary" on:click={onCancel}>Cancel</Button>
     </ModalFooter>
 </Modal>

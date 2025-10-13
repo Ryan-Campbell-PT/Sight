@@ -10,7 +10,8 @@ interface RecipeResponseObject {
     recipeList: Recipe[];
 }
 
-interface SaveRecipeResponse extends DefaultErrorResponse {
+export interface SaveRecipeResponse extends DefaultErrorResponse {
+
 }
 
 export interface GetActiveRecipes extends DefaultErrorResponse {

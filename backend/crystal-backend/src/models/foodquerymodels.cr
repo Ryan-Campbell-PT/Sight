@@ -34,7 +34,6 @@ class ListOfFoods
   include JSON::Serializable
 
   # tells json the key it should expect when parsing
-  @[JSON::Field(key: "foods")]
   property food_list : Array(FoodItem)
 
   def initialize(jsonResponse : NutritionixNaturalLangaugeResponse)

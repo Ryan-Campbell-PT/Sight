@@ -1,6 +1,5 @@
 require "json"
 
-# move this
 struct AnalysisErrorObject
   include JSON::Serializable
 
@@ -8,6 +7,15 @@ struct AnalysisErrorObject
   property error_level : ErrorLevel
 
   def initialize(@original_string : String = "", @error_level : ErrorLevel = ErrorLevel::None)
+  end
+end
+
+class DefaultErrorResponse
+  include JSON::Serializable
+
+  property success : Bool
+
+  def initialize(@success : Bool = true)
   end
 end
 

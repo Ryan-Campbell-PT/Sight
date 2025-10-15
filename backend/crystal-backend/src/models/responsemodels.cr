@@ -1,23 +1,28 @@
 # Response object containing all information relevant to a userFoodQuery request
-class UserFoodQueryResponse
+class UserFoodQueryResponse < DefaultErrorResponse
   include JSON::Serializable
 
   property list_of_foods : ListOfFoods
-  property errors : Array(AnalysisErrorObject)
-end
+  property error_list : Array(AnalysisErrorObject)
 
-# Response object containing information relevant to the creation and updating of a recipe
-class SaveRecipeResponse
-  include JSON::Serializable
-
-  property recipe_id : Int32 # Recipe_id for the created or updated recipe
-  property errors : Array(AnalysisErrorObject)
-
-  def initialize(@recipe_id : Int32 = -1, @errors : Array(AnalysisErrorObject) = Array(AnalysisErrorObject).new)
+  def initialize(nix : NutritionixNaturalLangaugeResponse)
+    @error_list = Array(AnalysisErrorObject).new
+    @list_of_foods = ListOfFoods.new(nix)
   end
 end
 
-class GetActiveRecipesResponse
+# Response object containing information relevant to the creation and updating of a recipe
+class SaveRecipeResponse < DefaultErrorResponse
+  include JSON::Serializable
+
+  property recipe_id : Int32 # Recipe_id for the created or updated recipe
+  property error_list : Array(AnalysisErrorObject)
+
+  def initialize(@recipe_id : Int32 = -1, @error_list : Array(AnalysisErrorObject) = Array(AnalysisErrorObject).new)
+  end
+end
+
+class GetActiveRecipesResponse < DefaultErrorResponse
   include JSON::Serializable
 
   property recipe_list : Array(Recipe)

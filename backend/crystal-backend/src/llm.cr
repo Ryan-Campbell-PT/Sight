@@ -73,12 +73,6 @@ class LLM
     return errorList
   end
 
-  # TODO I was thinking this could be used to access either specific recipes passed in
-  # or all of them that are in the list
-  # that way you can get nutrition information for specific recipes or all of them (to add up)
-  def self.get_recipe_names
-  end
-
   # sadly no real better way to write these
   def get_only_recipe_items : Array(QueryBit)
     @user_query_bits.select { |m| m.recipe_id != nil }
@@ -94,21 +88,17 @@ class LLM
     if @user_query_bits.size == nixResponse.foods.size
       # if the number of querybits == how many foods are in the nix response,
       # then everything the user typed in is accepted by the api, so no errors
-      puts "equal size"
-      retList
+      return retList
     elsif get_no_recipe_items.size == nixResponse.foods.size
       # if the nix response contains all the foods requested by the user
       # besides the recipes, no errors
-      puts "equal recipe size"
-      retList
+      return retList
     end
 
     # if neither above is true, then you can assume there is an error somewhere
     nixIndex = 0
     @user_query_bits.each do |bit|
-      puts "in loop: #{nixIndex}"
       if bit.recipe_id != nil
-        puts "contains recipe"
         # if its a recipe, its been analyised and not an error
         nixIndex += 1
         next
@@ -123,15 +113,12 @@ class LLM
       nixItem = nixResponse.foods[nixIndex]
 
       if bit.full_string.includes?(nixItem.food_name)
-        puts "no error with  #{bit.full_string}"
         # this index is fine, no error, continue
         nixIndex += 1
         next
       else
-        puts "error with #{bit.full_string}"
         # if we are at the same index, but the response from nix is different, error
         retList << AnalysisErrorObject.new(bit.full_string)
-        # nixIndex += 1
       end
     end
     retList

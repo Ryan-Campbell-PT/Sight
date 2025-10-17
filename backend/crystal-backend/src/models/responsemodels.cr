@@ -3,11 +3,13 @@ class UserFoodQueryResponse < DefaultErrorResponse
   include JSON::Serializable
 
   property list_of_foods : ListOfFoods
+  property total_nutrition_data : FoodItem
   property error_list : Array(AnalysisErrorObject)
 
   def initialize(nix : NutritionixNaturalLangaugeResponse)
-    @error_list = Array(AnalysisErrorObject).new
     @list_of_foods = ListOfFoods.new(nix)
+    @total_nutrition_data = FoodItem.new
+    @error_list = Array(AnalysisErrorObject).new
   end
 end
 

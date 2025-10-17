@@ -1,4 +1,4 @@
-import type { ListOfFoods } from "./FoodQueryModels";
+import type { ListOfFoods, FoodItem } from "./FoodQueryModels";
 import type { NixFoodItem } from "./NutritionixModels";
 
 interface NaturalLanguageResponseObject {
@@ -21,6 +21,7 @@ export interface GetActiveRecipes extends DefaultErrorResponse {
 }
 
 export interface UserFoodQueryResponse extends DefaultErrorResponse {
-    error_list: AnalysisErrorObject[]
     food_list: ListOfFoods
+    total_nutrition_data: FoodItem
+    error_list: AnalysisErrorObject[]
 }

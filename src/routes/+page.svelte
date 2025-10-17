@@ -8,10 +8,15 @@
         save_recipe,
         post_user_food_query,
     } from "$lib/service/HttpService";
+    import NutritionDisplay from "$lib/NutritionDisplay.svelte";
+    import type { UserFoodQueryResponse } from "$lib/models/ResponseModels";
 
     let activeRecipeList: Recipe[] = $state([] as Recipe[]);
     let userFoodQuery = $state("");
 
+    let userFoodQueryResponse = $state({} as UserFoodQueryResponse);
+    let nutritionLabelIsVisible = $state(false);
+    let nutritionBreakdownIsVisible = $state(false);
     onMount(get_active_recipes);
 
     // modal
@@ -28,7 +33,12 @@
 
     let postUserQuery = async () => {
         const ding = await post_user_food_query(userFoodQuery);
-        console.log(ding);
+        if (ding) {
+            console.log(ding);
+            userFoodQueryResponse = { ...ding };
+            nutritionBreakdownIsVisible = true;
+            nutritionLabelIsVisible = true;
+        }
     };
 </script>
 
@@ -57,6 +67,14 @@
                 active: false,
                 nutrition_id: -1,
             } as Recipe}
+        />
+    </div>
+
+    <div>
+        <NutritionDisplay
+            nutritionResponse={userFoodQueryResponse}
+            {nutritionBreakdownIsVisible}
+            {nutritionLabelIsVisible}
         />
     </div>
 </div>

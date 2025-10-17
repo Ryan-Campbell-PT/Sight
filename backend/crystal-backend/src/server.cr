@@ -159,6 +159,7 @@ post "/user_food_query" do |env|
   # transform that raw data into something that will be manipulated throughout the app
 
   response.list_of_foods = ListOfFoods.new(nixResponse)
+  response.total_nutrition_data = response.list_of_foods.get_total_nutrition_data
   response.success = true
   response.to_json
 end

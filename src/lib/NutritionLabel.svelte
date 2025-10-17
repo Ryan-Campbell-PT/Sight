@@ -1,20 +1,19 @@
 <!-- the nutrition label is the html that will represent the standard Label you see regularly irl -->
-<!--
 <script lang="ts">
-    import type { NixFoodItem } from "./models/NutritionixModels";
-    import {
-        NutritionLabelContent,
-        MacroNutrientIds,
-        MacroNutrientStrings,
-        getNutrientValueFromId,
-    } from "./NutritionData";
+    import { FoodItem } from "./models/FoodQueryModels";
     import { roundToDecimal } from "../lib/util";
     import { bootstrap } from "./bootstrapClasses";
+    import {
+        NutritionValues,
+        getNutritionId,
+        NutritionMap,
+    } from "$lib/models/NutritionConstants";
+    import { getNutrientValueFromId } from "$lib/service/NutritionService";
 
     let {
         totalNutritionInfo,
         isVisible,
-    }: { totalNutritionInfo: NixFoodItem; isVisible: boolean } = $props();
+    }: { totalNutritionInfo: FoodItem; isVisible: boolean } = $props();
 
     const calculateDailyValuePercentage = (
         currentValue: number,
@@ -23,27 +22,31 @@
         return Math.round((currentValue / dailyValue) * 100);
     };
 
-    const createNutritionRow = (name: string, isIndented: boolean): string => {
-        if (!totalNutritionInfo || !totalNutritionInfo.full_nutrients)
+    // TODO could change isIndented to indentLevel as a number to provide more indentation options
+    const createNutritionRow = (
+        macro: NutritionValues,
+        isIndented: boolean,
+    ): string => {
+        if (!totalNutritionInfo || !totalNutritionInfo.full_nutrient_dict)
             return "";
-        const macroInfo = NutritionLabelContent.find(
-            (m) => m.macro_name == name,
-        );
+        const macroInfo = NutritionMap[macro];
+
         if (!macroInfo) return "";
         const macroValue = roundToDecimal(
             getNutrientValueFromId(
                 macroInfo.id,
-                totalNutritionInfo.full_nutrient_map,
+                totalNutritionInfo.full_nutrient_dict,
             ),
             0,
         );
+
         return `
                 <div class="${isIndented ? bootstrap.nutritionLabel.extendedMacroRow : bootstrap.nutritionLabel.macroRow}">
                     <div class="${bootstrap.nutritionLabel.macroNameValue}">
                         ${isIndented ? `<span>${name}</span>` : `<b>${name}</b>`}
                         <span>${macroValue ?? 0}${macroInfo.unit}</span>
                     </div>
-                    ${macroInfo.daily_value ? `<b class="${bootstrap.nutritionLabel.percentage}">${calculateDailyValuePercentage(macroValue, macroInfo.daily_value)}%</b>` : ``}
+                    ${macroInfo.dailyValue ? `<b class="${bootstrap.nutritionLabel.percentage}">${calculateDailyValuePercentage(macroValue, macroInfo.dailyValue)}%</b>` : ``}
                 </div>
             `;
     };
@@ -60,8 +63,8 @@
                 <span>
                     {roundToDecimal(
                         getNutrientValueFromId(
-                            MacroNutrientIds.Calorie,
-                            totalNutritionInfo.full_nutrient_map,
+                            getNutritionId(NutritionValues.Calories),
+                            totalNutritionInfo.full_nutrient_dict,
                         ),
                         0,
                     )}
@@ -71,26 +74,25 @@
         <hr class="mx-1" />
         <div class="m-3">
             <span class="">% Daily Value*</span>
-            {#each [MacroNutrientStrings.TotalFat] as m}
+            {#each [NutritionValues.TotalFat] as m}
                 {@html createNutritionRow(m, false)}
             {/each}
             <div>
-                {#each [MacroNutrientStrings.SaturatedFat, MacroNutrientStrings.TransFat, MacroNutrientStrings.PolyunsaturatedFat, MacroNutrientStrings.MonounsaturatedFat] as m}
+                {#each [NutritionValues.SaturatedFat, NutritionValues.TransFat, NutritionValues.PolyFat, NutritionValues.MonoFat] as m}
                     {@html createNutritionRow(m, true)}
                 {/each}
             </div>
-            {#each [MacroNutrientStrings.Cholesterol, MacroNutrientStrings.Sodium, MacroNutrientStrings.Cholesterol] as m}
+            {#each [NutritionValues.Cholesterol, NutritionValues.Sodium, NutritionValues.Cholesterol] as m}
                 {@html createNutritionRow(m, false)}
             {/each}
             <div>
-                {#each [MacroNutrientStrings.DietaryFiber, MacroNutrientStrings.Sugar] as m}
+                {#each [NutritionValues.Fiber, NutritionValues.Sugar] as m}
                     {@html createNutritionRow(m, true)}
                 {/each}
             </div>
-            {#each [MacroNutrientStrings.Protein] as m}
+            {#each [NutritionValues.Protein] as m}
                 {@html createNutritionRow(m, false)}
             {/each}
         </div>
     </div>
 {/if}
--->

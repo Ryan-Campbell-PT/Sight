@@ -2,7 +2,7 @@
 
 import type { FoodItem } from "$lib/models/FoodQueryModels";
 import type { SaveRecipeRequest, NaturalLanguageRequest } from "$lib/models/RequestModels";
-import type { UserFoodQueryResponse } from "$lib/models/ResponseModels"
+import type { NaturalLanguageResponse } from "$lib/models/ResponseModels"
 import type { GetActiveRecipes, SaveRecipeResponse } from "$lib/models/ResponseModels";
 
 const host = "http://localhost:8080/"
@@ -53,8 +53,7 @@ export let get_active_recipes = async (): Promise<Recipe[]> => {
     return []
 };
 
-export let post_user_food_query = async (userFoodQuery: string): Promise<UserFoodQueryResponse> => {
-    // TODO the naming of these request and response objects need to be changed/the same
+export let post_user_food_query = async (userFoodQuery: string): Promise<NaturalLanguageResponse> => {
     const request: NaturalLanguageRequest = { user_food_query: userFoodQuery }
     const res = await fetch(host + "user_food_query", {
         method: "POST",
@@ -64,12 +63,12 @@ export let post_user_food_query = async (userFoodQuery: string): Promise<UserFoo
     });
 
     if (res.ok) {
-        const response = reviveUserFoodQueryResponse((await res.json()) as UserFoodQueryResponse)
+        const response = reviveUserFoodQueryResponse((await res.json()) as NaturalLanguageResponse)
         return response
     }
 
     // TODO figure this out
-    return {} as UserFoodQueryResponse
+    return {} as NaturalLanguageResponse
 }
 
 // this is necessary when copying data from api/json, as the nutrition_info comes back as a plain object, not a dict
@@ -87,8 +86,8 @@ function reviveFoodItem(data: any): FoodItem {
     return item;
 }
 
-function reviveUserFoodQueryResponse(raw: any): UserFoodQueryResponse {
-    const response = raw as UserFoodQueryResponse;
+function reviveUserFoodQueryResponse(raw: any): NaturalLanguageResponse {
+    const response = raw as NaturalLanguageResponse;
 
     if (response.total_nutrition_data)
         response.total_nutrition_data = reviveFoodItem(response.total_nutrition_data);

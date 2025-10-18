@@ -140,7 +140,7 @@ post "/user_food_query" do |env|
   foodQuery = env.params.json["user_food_query"].as(String)
 
   llm, nixResponse, errors = FoodService.analyse_user_food_query(foodQuery)
-  response = UserFoodQueryResponse.new(nixResponse)
+  response = NaturalLanguageResponse.new(nixResponse)
   if (errors.size > 0)
     response.error_list = errors
     response.success = false

@@ -1,5 +1,5 @@
 # Response object containing all information relevant to a userFoodQuery request
-class UserFoodQueryResponse < DefaultErrorResponse
+class NaturalLanguageResponse < DefaultErrorResponse
   include JSON::Serializable
 
   property list_of_foods : ListOfFoods

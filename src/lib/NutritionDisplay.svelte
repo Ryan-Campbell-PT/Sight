@@ -4,14 +4,14 @@
     import NutritionLabel from "./NutritionLabel.svelte";
     import FoodBreakdown from "./FoodBreakdown.svelte";
     import ErrorBreakdown from "./ErrorBreakdown.svelte";
-    import type { UserFoodQueryResponse } from "./models/ResponseModels";
+    import type { NaturalLanguageResponse } from "./models/ResponseModels";
 
     let {
         nutritionResponse,
         nutritionLabelIsVisible = true,
         nutritionBreakdownIsVisible = true,
     }: {
-        nutritionResponse: UserFoodQueryResponse;
+        nutritionResponse: NaturalLanguageResponse;
         nutritionLabelIsVisible: boolean;
         nutritionBreakdownIsVisible: boolean;
     } = $props();
@@ -29,7 +29,7 @@
 </script>
 
 <div>
-    {#if nutritionLabelIsVisible}
+    {#if nutritionLabelIsVisible && nutritionResponse}
         <div class="nutritionLabel">
             <NutritionLabel
                 totalNutritionInfo={nutritionResponse.total_nutrition_data}
@@ -37,7 +37,7 @@
             />
         </div>
     {/if}
-    {#if nutritionBreakdownIsVisible}
+    {#if nutritionBreakdownIsVisible && nutritionResponse && nutritionResponse.list_of_foods}
         <table class="total-food-nutrition-breakdown table">
             <thead>
                 <tr>
@@ -47,7 +47,7 @@
                 </tr>
             </thead>
             <tbody>
-                {#each nutritionResponse.food_list.food_list as food}
+                {#each nutritionResponse.list_of_foods.food_list as food}
                     <FoodBreakdown item={food} />
                 {/each}
                 {#each nutritionResponse.error_list as error}

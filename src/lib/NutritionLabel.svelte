@@ -43,7 +43,7 @@
         return `
                 <div class="${isIndented ? bootstrap.nutritionLabel.extendedMacroRow : bootstrap.nutritionLabel.macroRow}">
                     <div class="${bootstrap.nutritionLabel.macroNameValue}">
-                        ${isIndented ? `<span>${name}</span>` : `<b>${name}</b>`}
+                        ${isIndented ? `<span>${macroInfo.displayName}</span>` : `<b>${macroInfo.displayName}</b>`}
                         <span>${macroValue ?? 0}${macroInfo.unit}</span>
                     </div>
                     ${macroInfo.dailyValue ? `<b class="${bootstrap.nutritionLabel.percentage}">${calculateDailyValuePercentage(macroValue, macroInfo.dailyValue)}%</b>` : ``}
@@ -82,7 +82,7 @@
                     {@html createNutritionRow(m, true)}
                 {/each}
             </div>
-            {#each [NutritionValues.Cholesterol, NutritionValues.Sodium, NutritionValues.Cholesterol] as m}
+            {#each [NutritionValues.Cholesterol, NutritionValues.Sodium, NutritionValues.TotalCarbohydrate] as m}
                 {@html createNutritionRow(m, false)}
             {/each}
             <div>

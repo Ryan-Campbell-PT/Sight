@@ -1,4 +1,10 @@
-// Response Objects
+enum ErrorLevel {
+    None,
+    Minor,
+    Warning,
+    Error,
+}
+
 interface DefaultErrorResponse {
     success: boolean;
 }
@@ -11,11 +17,7 @@ interface UserQueryErrorResponse extends DefaultErrorResponse {
 
 }
 
-interface NutritionErrorObject {
-    error_string: string;
-}
-
-
 interface AnalysisErrorObject {
-    error_string: string;
+    original_string: string;
+    error_level: ErrorLevel
 }

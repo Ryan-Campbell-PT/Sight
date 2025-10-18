@@ -29,16 +29,6 @@ export class FoodItem {
         });
         this.full_nutrient_dict = dict;
     }
-
-    reviveFoodItem(data: any): FoodItem {
-        const item = new FoodItem();
-        Object.assign(item, data);
-        item.full_nutrient_dict = new Map(
-            Object.entries(data.full_nutrient_dict).map(([k, v]) => [Number(k), Number(v)])
-        );
-        return item;
-    }
-
 }
 
 // Helper interface for nutrient objects

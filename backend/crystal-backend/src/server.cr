@@ -135,6 +135,13 @@ get "/get_active_recipes" do |env|
   response.to_json
 end
 
+# TODO so right now what is happening
+# if any errors whatsoever happen, success is set to false
+# and essentially all data is thrown away and the nutrition label doesnt display any info
+# (nutrition breakdown does which is interesting tho)
+
+# so my thought process is that strict functionality should only be present for recipe saving
+# for just the natrual language response, it should display any information thats present
 post "/user_food_query" do |env|
   # grab the users food string
   foodQuery = env.params.json["user_food_query"].as(String)
@@ -143,8 +150,8 @@ post "/user_food_query" do |env|
   response = NaturalLanguageResponse.new(nixResponse)
   if (errors.size > 0)
     response.error_list = errors
-    response.success = false
-    next response.to_json
+    # response.success = false
+    # next response.to_json
   end
 
   # analyse the string provided and get whatever information it catches

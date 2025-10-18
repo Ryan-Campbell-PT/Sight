@@ -76,7 +76,6 @@ function reviveFoodItem(data: any): FoodItem {
     const item: FoodItem = data;
     Object.assign(item, data);
 
-    // Convert plain object { "208": 250, "204": 10 } → Map<number, number>
     if (data.full_nutrient_dict && !(data.full_nutrient_dict instanceof Map)) {
         item.full_nutrient_dict = new Map(
             Object.entries(data.full_nutrient_dict).map(([k, v]) => [Number(k), Number(v)])
@@ -92,9 +91,8 @@ function reviveUserFoodQueryResponse(raw: any): NaturalLanguageResponse {
     if (response.total_nutrition_data)
         response.total_nutrition_data = reviveFoodItem(response.total_nutrition_data);
 
-    if (Array.isArray(response.food_list))
-        // TOOD i never noticed this is a double naming. may want to change
-        response.food_list.food_list = response.food_list.map((f) => reviveFoodItem(f));
+    if (response.list_of_foods && Array.isArray(response.list_of_foods.food_list))
+        response.list_of_foods.food_list = response.list_of_foods.food_list.map((f) => reviveFoodItem(f));
 
     return response;
 }

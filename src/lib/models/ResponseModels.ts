@@ -15,7 +15,7 @@ export interface GetActiveRecipes extends DefaultErrorResponse {
 }
 
 export interface NaturalLanguageResponse extends DefaultErrorResponse {
-    food_list: ListOfFoods
+    list_of_foods: ListOfFoods
     total_nutrition_data: FoodItem
     error_list: AnalysisErrorObject[]
 }

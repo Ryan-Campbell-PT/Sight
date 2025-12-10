@@ -70,7 +70,7 @@ module FoodService
     ret
   end
 
-  def analyse_user_food_query(foodQuery : String) : {LLM, NutritionixNaturalLangaugeResponse, Array(AnalysisErrorObject)}
+  def analyse_user_food_query(foodQuery : String) : FoodQueryAnalysis
     llm = LLM.new(foodQuery)
     # if a recipe is included in the query, confirm it by the user first (could match a recipe they didnt mean/know)
     # if (llm.get_only_recipe_items.size > 0) # && !ignoreRecipe)
@@ -82,9 +82,13 @@ module FoodService
     #   end
     # end
 
-    nixResponse = FoodService.natural_language_query(llm.original_query_string)
-    errorList = llm.check_for_errors(nixResponse)
+    nix_response = FoodService.natural_language_query(llm.original_query_string)
+    error_list = llm.check_for_errors(nix_response)
+    recipeIdList = llm.get_only_recipe_items.compact_map(&.recipe_id)
+    recipe_list = RecipeService.get_many(recipeIdList)
 
-    return llm, nixResponse, errorList
+    return FoodQueryAnalysis.new(llm, nix_response, recipe_list, error_list)
+
+    return analysis
   end
 end

@@ -54,6 +54,7 @@ export let get_active_recipes = async (): Promise<Recipe[]> => {
 };
 
 export let post_user_food_query = async (userFoodQuery: string): Promise<NaturalLanguageResponse> => {
+    debugger
     const request: NaturalLanguageRequest = { user_food_query: userFoodQuery }
     const res = await fetch(host + "user_food_query", {
         method: "POST",
@@ -63,7 +64,12 @@ export let post_user_food_query = async (userFoodQuery: string): Promise<Natural
     });
 
     if (res.ok) {
-        const response = reviveUserFoodQueryResponse((await res.json()) as NaturalLanguageResponse)
+        debugger
+        const data = await res.json()
+        const dates = data as NaturalLanguageResponse
+        // const ding = (await res.json()) as NaturalLanguageResponse
+        // debugger
+        const response = reviveUserFoodQueryResponse(dates)
         return response
     }
 

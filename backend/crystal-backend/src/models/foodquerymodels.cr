@@ -51,6 +51,9 @@ class ListOfFoods
     end
   end
 
+  def initialize(@food_list : Array(FoodItem) = Array(FoodItem).new)
+  end
+
   def get_total_nutrition_data : FoodItem
     ret = FoodItem.new
     food_list.each do |food|
@@ -63,27 +66,15 @@ class ListOfFoods
   end
 end
 
-# foodList = Array(FoodItem).new
-# foodItem = FoodItem.new
-# foodItem.food_name = "ding"
-# foodItem.brand_name = "dong"
-# foodItem.serving_qty = 1
-# foodItem.serving_unit = ""
-# foodItem.full_nutrient_dict[0] = 2.5
-# foodItem.full_nutrient_dict[1] = 1.5
+struct FoodQueryAnalysis
+  property llm : LLM
+  property nix_response : NutritionixNaturalLangaugeResponse
+  property recipe_list : Array(Recipe)
+  property error_list : Array(AnalysisErrorObject)
 
-# foodItem1 = FoodItem.new
-# foodItem1.food_name = "dong"
-# foodItem1.brand_name = "ding"
-# foodItem1.serving_qty = 1
-# foodItem1.serving_unit = ""
-# foodItem1.full_nutrient_dict[0] = 2.5
-# foodItem1.full_nutrient_dict[1] = 1.5
-
-# foodList = [foodItem, foodItem1]
-
-# lister = ListOfFoods.new
-# lister.food_list = foodList
-
-# # puts lister.inspect
-# puts lister.get_total_nutrition_data.inspect
+  def initialize(@llm, @nix_response, recipe_list, error_list)
+    @llm = LLM.new
+    @recipe_list = Array(Recipe).new
+    @error_list = Array(AnalysisErrorObject).new
+  end
+end

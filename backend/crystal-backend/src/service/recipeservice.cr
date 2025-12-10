@@ -19,6 +19,9 @@ module RecipeService
 
   def get_many(ids : Array(Int32)) : Array(Recipe)
     ret = Array(Recipe).new
+    unless ids.size > 0
+      return ret
+    end
     Database.db.query("SELECT * FROM recipe WHERE id IN ($1)", ids.join(",")) do |rs|
       # TODO check back on this in compile time, i kept getting the error
       # expected argument #1 to 'Array(Recipe)#<<' to be Recipe, not Array(Recipe)

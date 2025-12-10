@@ -1,10 +1,10 @@
 <script lang="ts">
+    import type { FoodItem } from "./models/FoodQueryModels";
     import {
-        type FoodItem,
-        MacroNutrientIds,
-        MacroNutrientStrings,
-        getNutrientValueFromId,
-    } from "./NutritionData";
+        getNutritionId,
+        NutritionValues,
+    } from "./models/NutritionConstants";
+    import { getNutrientValueFromId } from "./service/NutritionService";
     import { roundToDecimal } from "./util";
 
     let { item }: { item: FoodItem } = $props();
@@ -12,18 +12,15 @@
 
 <tr class="food-breakdown {item.food_name}">
     <th scope="row">
-        <img
-            style="width: 50px; height: 50px;"
-            alt={item.food_name}
-            src={item.photo.thumb}
-        />
+        <img style="width: 50px; height: 50px;" alt={item.food_name} />
+        <!-- src={item.photo.thumb}  -->
     </th>
     <td>{item.food_name}</td>
     <td>
         {roundToDecimal(
             getNutrientValueFromId(
-                MacroNutrientIds.Calorie,
-                item.full_nutrient_map,
+                getNutritionId(NutritionValues.Calories),
+                item.full_nutrient_dict,
             ),
             0,
         )}
@@ -31,8 +28,8 @@
     <td>
         {roundToDecimal(
             getNutrientValueFromId(
-                MacroNutrientIds.TotalCarbohydrate,
-                item.full_nutrient_map,
+                getNutritionId(NutritionValues.TotalCarbohydrate),
+                item.full_nutrient_dict,
             ),
             0,
         )}
@@ -40,8 +37,8 @@
     <td>
         {roundToDecimal(
             getNutrientValueFromId(
-                MacroNutrientIds.Protein,
-                item.full_nutrient_map,
+                getNutritionId(NutritionValues.Protein),
+                item.full_nutrient_dict,
             ),
             0,
         )}
@@ -49,8 +46,8 @@
     <td>
         {roundToDecimal(
             getNutrientValueFromId(
-                MacroNutrientIds.Sodium,
-                item.full_nutrient_map,
+                getNutritionId(NutritionValues.Sodium),
+                item.full_nutrient_dict,
             ),
             0,
         )}
@@ -58,8 +55,8 @@
     <td>
         {roundToDecimal(
             getNutrientValueFromId(
-                MacroNutrientIds.Sugar,
-                item.full_nutrient_map,
+                getNutritionId(NutritionValues.Sugar),
+                item.full_nutrient_dict,
             ),
             0,
         )}
@@ -67,8 +64,8 @@
     <td>
         {roundToDecimal(
             getNutrientValueFromId(
-                MacroNutrientIds.TotalFat,
-                item.full_nutrient_map,
+                getNutritionId(NutritionValues.TotalFat),
+                item.full_nutrient_dict,
             ),
             0,
         )}

@@ -1,6 +1,7 @@
 <!-- this page will show all active recipes,
 let you add recipes,
 make modifications to recipes -->
+<!--
 <script lang="ts">
     import CustomRecipe from "$lib/CustomRecipe.svelte";
     import type {
@@ -95,3 +96,4 @@ make modifications to recipes -->
         />
     </div>
 </div>
+-->

@@ -1,0 +1,21 @@
+name: crystal-backend
+version: 0.1.0
+
+authors:
+  - Ryan Campbell <ryacampbell15@gmail.com>
+
+targets:
+  crystal-backend:
+    main: src/crystal-backend.cr
+
+crystal: '>= 1.17.1'
+
+license: MIT
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+  dotenv:
+    github: gdotdesign/cr-dotenv
+  pg:
+    github: will/crystal-pg

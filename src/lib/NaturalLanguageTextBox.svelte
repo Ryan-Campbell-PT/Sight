@@ -2,8 +2,6 @@
 idea is to have it in the recipe and nutrition page -->
 <script lang="ts">
     import { Input, Label, Button } from "@sveltestrap/sveltestrap";
-    import type { NaturalLanguageResponseObject } from "./NutritionData";
-    import { naturalLanguageResponseObject_MapCorrection } from "./NutritionData";
     import { formatDateToYYYYMMDD } from "./util";
 
     // state
@@ -31,6 +29,7 @@ idea is to have it in the recipe and nutrition page -->
     } = $props();
 
     let post_foodList = async (saveToDb = false) => {
+        /*
         const body = {
             foodListString: foodListString,
             date: currentSelectedDate,
@@ -60,6 +59,7 @@ idea is to have it in the recipe and nutrition page -->
         } catch (err) {
             console.log(err);
         }
+            */
     };
 </script>
 

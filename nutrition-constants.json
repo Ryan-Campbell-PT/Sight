@@ -1,0 +1,130 @@
+[
+    {
+        "key": "Calories",
+        "id": 208,
+        "unit": "kcal",
+        "dailyValue": 2000,
+        "dbName": "calories",
+        "displayName": "Calories"
+    },
+    {
+        "key": "TotalCarbohydrate",
+        "id": 205,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": "carbs",
+        "displayName": "Carbs"
+    },
+    {
+        "key": "TotalFat",
+        "id": 204,
+        "unit": "g",
+        "dailyValue": 78,
+        "dbName": "total_fat",
+        "displayName": "Total Fat"
+    },
+    {
+        "key": "SaturatedFat",
+        "id": 606,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": "saturated_fat",
+        "displayName": "Saturated Fat"
+    },
+    {
+        "key": "PolyFat",
+        "id": 646,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": "poly_fat",
+        "displayName": "Polyunsaturated Fat"
+    },
+    {
+        "key": "MonoFat",
+        "id": 645,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": "mono_fat",
+        "displayName": "Monounsaturated Fat"
+    },
+    {
+        "key": "TransFat",
+        "id": 605,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": null,
+        "displayName": "Trans Fat"
+    },
+    {
+        "key": "Protein",
+        "id": 203,
+        "unit": "g",
+        "dailyValue": null,
+        "dbName": "protein",
+        "displayName": "Protein"
+    },
+    {
+        "key": "Sugar",
+        "id": 269,
+        "unit": "g",
+        "dailyValue": 50,
+        "dbName": "sugar",
+        "displayName": "Sugar"
+    },
+    {
+        "key": "Sodium",
+        "id": 307,
+        "unit": "mg",
+        "dailyValue": 2300,
+        "dbName": "sodium",
+        "displayName": "Sodium"
+    },
+    {
+        "key": "Fiber",
+        "id": 291,
+        "unit": "g",
+        "dailyValue": 28,
+        "dbName": "fiber",
+        "displayName": "Fiber"
+    },
+    {
+        "key": "Cholesterol",
+        "id": 601,
+        "unit": "mg",
+        "dailyValue": 300,
+        "dbName": "cholesterol",
+        "displayName": "Cholesterol"
+    },
+    {
+        "key": "Potassium",
+        "id": 306,
+        "unit": "mg",
+        "dailyValue": null,
+        "dbName": "potassium",
+        "displayName": "Potassium"
+    },
+    {
+        "key": "Iron",
+        "id": 303,
+        "unit": "mg",
+        "dailyValue": null,
+        "dbName": null,
+        "displayName": "Iron"
+    },
+    {
+        "key": "Caffeine",
+        "id": 262,
+        "unit": "mg",
+        "dailyValue": null,
+        "dbName": null,
+        "displayName": "Caffeine"
+    },
+    {
+        "key": "Phosphorus",
+        "id": 305,
+        "unit": "mg",
+        "dailyValue": null,
+        "dbName": "phosphorus",
+        "displayName": "Phosphorus"
+    }
+]

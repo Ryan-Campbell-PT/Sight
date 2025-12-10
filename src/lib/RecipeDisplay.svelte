@@ -1,5 +1,6 @@
 <!-- this will handle the collection of Recipes, 
 allow the display of Active and Inactive Recipes -->
+<!--
 <script lang="ts">
     import type { Recipe } from "../lib/NutritionData";
     import CustomRecipe from "./CustomRecipe.svelte";
@@ -21,7 +22,7 @@ allow the display of Active and Inactive Recipes -->
         listOfRecipes.filter((m) => !m.active),
     );
 </script>
-
+-->
 <div class="recipe-display">
     <!-- {#each listOfRecipes as recipe}
         <CustomRecipe {isEditable} {recipe} />
